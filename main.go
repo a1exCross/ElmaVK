@@ -7,26 +7,12 @@ import (
 	"strconv"
 
 	callback "github.com/a1exCross/ElmaVK/callbackApi"
-	//longpool "github.com/a1exCross/VkElmaLib/longpool-user"
 	Methods "github.com/a1exCross/ElmaVK/methods"
 )
 
-var vk = *Methods.Session("9e63c5f226af4bb3bec5ce0d83e5a093e6ae2d5b034be0d67b6c0f87a46f0b7fcad7d8c7a2c76a283d787")
-
-//var vk = *Methods.Session("514d4386f75212c7b05c877e7cd35e851c5b6716a20e2c0ec42d391eeb97bd94a602e3f8ae88d07a3589e")
+var vk = *Methods.Session("token")
 
 func main() {
-	/* lp, err := longpool.New(vk, longpool.GetLongPoolServerParams{
-		NeedPTS:   true,
-		LpVersion: 3,
-		Mode:      2,
-	})
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	lp.Run() */
 
 	/* 	////// Авторизация
 	   	auth, u := oauth.CodeAuthInUrl(oauth.Group_params{
@@ -64,10 +50,6 @@ func main() {
 		callback.MessageReply, callback.MessageAllow, callback.MessageDeny, callback.MessageTypingState)
 
 	_, _ = clbck.AutoConnect() //автоматическое подключение Callback API (без вмешательства пользователя)
-
-	//log.Println(s.Response[0])
-
-	//
 
 	at, err := vk.GetAttachments(Methods.GetAttachmentsParams{
 		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
