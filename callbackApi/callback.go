@@ -1,4 +1,4 @@
-package callback
+package callbackApi
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	//events "vksdk/callbackApi/events"
-	vk "github.com/a1exCross/ElmaVK/methods"
+	vk "github.com/a1exCross/ElmaVK/api"
 )
 
 type Callback struct {
@@ -25,8 +25,8 @@ type Callback struct {
 	return &callback{}
 } */
 
-func New() *Callback {
-	return &Callback{}
+func New() Callback {
+	return Callback{}
 }
 
 func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {

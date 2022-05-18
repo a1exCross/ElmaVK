@@ -1,4 +1,4 @@
-package callback
+package callbackApi
 
 type PhotoSize struct {
 	Type   string `json:"type"`
@@ -210,12 +210,12 @@ type Message struct {
 	Secret  string        `json:"secret"`
 }
 
-func (p PhotoAttachment) GetMaxSizePhotoUrl() *PhotoSize {
+func (p PhotoAttachment) GetMaxSizePhotoUrl() PhotoSize {
 	var max = p.Sizes[0]
 	for _, v := range p.Sizes {
 		if v.Height > max.Height && v.Width > max.Width {
 			max = v
 		}
 	}
-	return &max
+	return max
 }

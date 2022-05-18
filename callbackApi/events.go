@@ -1,5 +1,4 @@
-//package events
-package callback
+package callbackApi
 
 import (
 	"encoding/json"
@@ -35,7 +34,7 @@ type FuncList struct {
 	MessageDeny        func(e Events, obj MessageDenyObject)
 }
 
-func (c *Callback) CallFuncList(data []byte, e Events) {
+func (c Callback) CallFuncList(data []byte, e Events) {
 	//log.Println(string(e.Object))
 
 	switch e.Type {

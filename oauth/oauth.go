@@ -2,6 +2,8 @@ package oauth
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,7 +12,7 @@ import (
 )
 
 const auth_url = "https://oauth.vk.com/authorize?"
-const token_geturl = "https://oauth.vk.com/access_token?"
+const get_token_url = "https://oauth.vk.com/access_token?"
 const version = "5.131"
 
 type Display string
@@ -28,28 +30,76 @@ const (
 	Manage   Scope = "manage"
 	Photos   Scope = "photos"
 	Docs     Scope = "docs"
+	Video    Scope = "video"
 )
 
-type Group_params struct {
+type AuthParams struct {
 	Client_ID    int
+	CleintSecret string
 	Redirect_URI string
 	Group_IDs    []int
 	Display      Display
 	Scope        []Scope
 	State        string
+	Revoke       bool
 }
 
-func GetGroupParams() *Group_params {
-	return &Group_params{}
+func GetGroupParams() AuthParams {
+	return AuthParams{}
 }
 
 type Auth struct {
-	Group_params
+	AuthParams
 	client_secret string
 	Client        *http.Client
 }
 
-func CodeAuthInUrl(g Group_params, client_secret string) (Auth, string) {
+//Генерация ссылки для получения токена пользователя
+func ImplictFlow(p AuthParams) (*url.URL, error) {
+	var u string
+
+	if p.Client_ID != 0 {
+		u += fmt.Sprintf("client_id=%d", p.Client_ID)
+	} else {
+		return &url.URL{}, errors.New("ClientID не указан")
+	}
+
+	if p.Display != "" {
+		u += fmt.Sprintf("display=%s", p.Display)
+	} else {
+		u += "display=page"
+	}
+
+	if p.Redirect_URI != "" {
+		u += fmt.Sprintf("redirect_uri=%s", p.Redirect_URI)
+	}
+
+	if p.Scope != nil {
+		u += "&scope="
+	}
+
+	for i, v := range p.Scope {
+		if i > 0 {
+			u += ","
+		}
+		u += string(v)
+	}
+
+	u += "&response_type=token&v=" + version
+
+	u = auth_url + u
+
+	ur, err := url.Parse(u)
+
+	if err != nil {
+		return &url.URL{}, err
+	}
+
+	return ur, nil
+}
+
+//Получение токена сообщества
+func AuthCodeFlow(g AuthParams) (Auth, string) {
 	var u string
 
 	if g.Client_ID != 0 {
@@ -89,9 +139,8 @@ func CodeAuthInUrl(g Group_params, client_secret string) (Auth, string) {
 	u += "&response_type=code&v=" + version
 
 	return Auth{
-		Group_params:  g,
-		client_secret: client_secret,
-		Client:        http.DefaultClient,
+		AuthParams: g,
+		Client:     http.DefaultClient,
 	}, auth_url + u
 }
 
@@ -105,13 +154,13 @@ type GroupTokens struct {
 	ExpiresIn int          `json:"expires_in"`
 }
 
-func (a *Auth) req_token(code string) *GroupTokens {
+func (a *Auth) req_token(code string) GroupTokens {
 	u := "client_id=" + strconv.Itoa(a.Client_ID) +
 		"&client_secret=" + a.client_secret +
 		"&redirect_uri=" + a.Redirect_URI +
 		"&code=" + code
 
-	req, _ := http.NewRequest("GET", token_geturl+u, nil)
+	req, _ := http.NewRequest("GET", get_token_url+u, nil)
 
 	res, err := a.Client.Do(req)
 
@@ -124,10 +173,10 @@ func (a *Auth) req_token(code string) *GroupTokens {
 	var t GroupTokens
 	err = json.Unmarshal(data, &t)
 
-	return &t
+	return t
 }
 
-func (a Auth) GetToken(u *url.URL) *GroupTokens {
+func (a Auth) GetToken(u *url.URL) GroupTokens {
 	code := u.Query().Get("code")
 
 	return a.req_token(code)
