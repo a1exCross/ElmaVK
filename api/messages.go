@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/a1exCross/ElmaVK/ApiErrors"
+	"github.com/a1exCross/ElmaVK/apiErrors"
 )
 
 type SendMessage struct {
@@ -36,9 +36,9 @@ type SendMessage struct {
 	StickerID int
 	GroupID   int
 	Token     string
-	//Keyboard text
+	Keyboard  Keyboard `json:"keyboard"`
 	//Template text
-	//Payload text
+	Payload string
 	//ContentSource text json
 	DontParseLink   bool
 	DisableMentions bool
@@ -47,7 +47,136 @@ type SendMessage struct {
 }
 
 type ResponseSendMessage struct {
+	//Response int `json:"response"`
+	Response []struct {
+		PeerID                int `json:"peer_id"`
+		MessageID             int `json:"message_id"`
+		ConversationMessageID int `json:"conversation_message_id"`
+	} `json:"response"`
+}
+
+type ShowSnackbarAnswerType struct {
+	Text string
+}
+
+type OpenLinkAnswerType struct {
+	Link string
+}
+
+type OpenAppAnswerType struct {
+	AppID   int
+	OwnerID int
+	Hash    string
+}
+
+type EventAnswerType struct {
+	Type         string
+	ShowSnackbar *ShowSnackbarAnswerType
+	OpenLink     *OpenLinkAnswerType
+	OpenApp      *OpenAppAnswerType
+}
+
+type SendMessageEventAnswerParams struct {
+	EventID   string          `json:"event_id"`
+	UserID    int             `json:"user_id"`
+	PeerID    int             `json:"peer_id"`
+	EventData EventAnswerType `json:"event_data"`
+}
+
+func toJsonParam(p1, p2 string) string {
+	return fmt.Sprintf("\"%s\":\"%s\"", p1, p2)
+}
+
+type SendMessageEventAnswerResponse struct {
 	Response int `json:"response"`
+}
+
+func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageEventAnswerResponse, error) {
+	data := url.Values{}
+
+	if p.EventID != "" {
+		data.Set("event_id", p.EventID)
+	} else {
+		return SendMessageEventAnswerResponse{}, errors.New("Required field EventID is empty, Method:SendMessageEventAnswer")
+	}
+
+	if p.PeerID != 0 {
+		data.Set("peer_id", strconv.Itoa(p.PeerID))
+	} else {
+		return SendMessageEventAnswerResponse{}, errors.New("Required field PeerID is empty, Method:SendMessageEventAnswer")
+	}
+
+	if p.UserID != 0 {
+		data.Set("user_id", strconv.Itoa(p.UserID))
+	} else {
+		return SendMessageEventAnswerResponse{}, errors.New("Required field UserID is empty, Method:SendMessageEventAnswer")
+	}
+
+	if p.EventData.OpenLink != nil {
+		p.EventData.Type = "open_link"
+	}
+
+	if p.EventData.OpenApp != nil {
+		p.EventData.Type = "open_app"
+	}
+
+	if p.EventData.ShowSnackbar != nil {
+		p.EventData.Type = "show_snackbar"
+	}
+
+	var u string = ""
+
+	if v.Token != "" {
+		u += "&v=" + v.Version + "&access_token=" + v.Token
+	} else {
+		return SendMessageEventAnswerResponse{}, errors.New("Auth token is empty")
+	}
+
+	var prm string
+
+	if p.EventData.Type == "open_link" {
+		prm = "{" + toJsonParam("link", p.EventData.OpenLink.Link) + "," + toJsonParam("type", p.EventData.Type) + "}"
+	}
+
+	if p.EventData.Type == "show_snackbar" {
+		prm = "{" + toJsonParam("text", p.EventData.ShowSnackbar.Text) + "," + toJsonParam("type", p.EventData.Type) + "}"
+	}
+
+	if p.EventData.Type == "open_app" {
+		prm = "{" + toJsonParam("app_id", strconv.Itoa(p.EventData.OpenApp.AppID)) + "," +
+			toJsonParam("owner_id", strconv.Itoa(p.EventData.OpenApp.OwnerID)) + "," +
+			toJsonParam("hash", p.EventData.OpenApp.Hash) + "}"
+	}
+
+	data.Set("event_data", prm)
+
+	res, err := v.Reqeust_api_post("messages.sendMessageEventAnswer?", u, data)
+
+	if err != nil {
+		return SendMessageEventAnswerResponse{}, err
+	}
+
+	check := apiErrors.GetError(res)
+
+	if check != "ok" {
+		return SendMessageEventAnswerResponse{}, errors.New(check)
+	}
+
+	dat, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return SendMessageEventAnswerResponse{}, err
+	}
+
+	var t SendMessageEventAnswerResponse
+
+	err = json.Unmarshal(dat, &t)
+
+	if err != nil {
+		return SendMessageEventAnswerResponse{}, err
+	}
+
+	return t, nil
 }
 
 func (v VK) GetSendMessageParam() SendMessage {
@@ -58,6 +187,7 @@ type GetAttachmentsParams struct {
 	FilePaths     []string
 	PeerID        int
 	OriginalPhoto bool
+	OriginalVideo bool
 }
 
 func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
@@ -95,7 +225,10 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			}
 
 			attachment_type = "photo"
-		} else if ext == ".mp4" || ext == ".avi" || ext == ".3gp" || ext == ".mpeg" || ext == ".mov" || ext == ".flw" || ext == ".wmv" /* || ext == ".mp3"  */ {
+		} else if (ext == ".mp4" && !p.OriginalVideo) || (ext == ".avi" && !p.OriginalVideo) ||
+			(ext == ".3gp" && !p.OriginalVideo) || (ext == ".mpeg" && !p.OriginalVideo) ||
+			(ext == ".mov" && !p.OriginalVideo) || (ext == ".flw" && !p.OriginalVideo) ||
+			(ext == ".wmv" && !p.OriginalVideo) /* || ext == ".mp3"  */ {
 			title := strings.Replace(filename, ext, "", len(ext))
 
 			log.Println(title)
@@ -152,7 +285,7 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			return nil, err
 		}
 
-		check := ApiErrors.GetError(res)
+		check := apiErrors.GetError(res)
 
 		if check != "ok" {
 			return nil, errors.New(check)
@@ -282,6 +415,20 @@ func (v VK) SendMessage(s SendMessage) (ResponseSendMessage, error) {
 		data.Set("attachment", att)
 	}
 
+	if s.Keyboard.Buttons == nil {
+		s.Keyboard.Buttons = [][]KeyboardButtons{}
+	}
+
+	//s.Keyboard.OneTime = true
+
+	ps, _ := json.Marshal(s.Keyboard)
+
+	data.Set("keyboard", string(ps))
+
+	log.Println(data)
+
+	//os.Exit(1)
+
 	data.Set("random_id", strconv.Itoa(s.RandomID))
 
 	if v.Token != "" {
@@ -296,7 +443,7 @@ func (v VK) SendMessage(s SendMessage) (ResponseSendMessage, error) {
 		return ResponseSendMessage{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return ResponseSendMessage{}, errors.New(check)
@@ -307,6 +454,8 @@ func (v VK) SendMessage(s SendMessage) (ResponseSendMessage, error) {
 	if err != nil {
 		return ResponseSendMessage{}, err
 	}
+
+	log.Println(string(dat))
 
 	var t ResponseSendMessage
 
@@ -341,7 +490,7 @@ func (v VK) SaveVideo(p SaveVideoParam) (SaveVideoResponse, error) {
 	var u string = ""
 
 	if p.Name != "" {
-		u += "name=" + p.Name //пробелы убрать
+		u += "name=" + url.QueryEscape(p.Name) //пробелы убрать
 	}
 
 	u += "&is_private=1" //+ strconv.FormatBool(p.IsPrivate)
@@ -372,7 +521,7 @@ func (v VK) SaveVideo(p SaveVideoParam) (SaveVideoResponse, error) {
 		return SaveVideoResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return SaveVideoResponse{}, errors.New(check)
@@ -433,7 +582,7 @@ func (v VK) GetMessagesUploadServerDoc(tp string, peer_id int) (string, error) {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -475,7 +624,7 @@ func (v VK) GetMessagesUploadServerAudio() (string, error) {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -538,7 +687,7 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -618,7 +767,7 @@ func (v VK) SaveDoc(f string) (SaveDoc, error) {
 		return SaveDoc{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return SaveDoc{}, errors.New(check)
@@ -690,7 +839,7 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 		return SaveMessagesPhoto{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return SaveMessagesPhoto{}, errors.New(check)
@@ -821,7 +970,7 @@ func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
 		return GetVideoResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return GetVideoResponse{}, errors.New(check)

@@ -7,7 +7,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/a1exCross/ElmaVK/ApiErrors"
+	"github.com/a1exCross/ElmaVK/apiErrors"
 )
 
 type group_info struct {
@@ -34,7 +34,7 @@ func (v VK) GetCurrentGroup() (*GroupInfo, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -74,7 +74,7 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -124,7 +124,7 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -160,7 +160,7 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 		return 0, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -199,7 +199,7 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 		return -1, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -287,7 +287,7 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 		return -1, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)

@@ -60,16 +60,71 @@ func main() {
 		MessageTypingState: MessageTypingStatee,
 		MessageAllow:       MessageAlloww,
 		MessageDeny:        MessageDenyy,
+		MessageEvent:       MessageEventt,
 	}
 
 	clbck.Settings = append(clbck.Settings, callbackApi.MessageEdit, callbackApi.MessageNew,
-		callbackApi.MessageReply, callbackApi.MessageAllow, callbackApi.MessageDeny, callbackApi.MessageTypingState)
+		callbackApi.MessageReply, callbackApi.MessageAllow, callbackApi.MessageDeny, callbackApi.MessageTypingState, callbackApi.MessageEvent)
 
-	_, _ = clbck.AutoConnect() //автоматическое подключение Callback API (без вмешательства пользователя)
+	go func() {
+		_, _ = clbck.AutoConnect() //автоматическое подключение Callback API (без вмешательства пользователя)
+	}()
 
-	//log.Println(s.Response[0])
+	k := api.GetKeyboard()
 
-	//
+	k.OneTime = true
+	k.Inline = false
+
+	/* k.AddButton(api.KeyboardButtons{
+		Action: api.KeyboardActionTypeText{
+			Type:    api.ActionText,
+			Payload: api.ToPayload("1"),
+			Label:   "Дратути",
+		},
+		Color: api.Primary,
+	})
+
+	k.AddButton(api.KeyboardButtons{
+		Action: api.KeyboardActionTypeText{
+			Type:    api.ActionText,
+			Payload: api.ToPayload("2"),
+			Label:   "До свидания",
+		},
+		Color: api.Secondary,
+	})
+
+	k.AddLine()
+
+	k.AddButton(api.KeyboardButtons{
+		Action: api.KeyboardActionTypeOpenLink{
+			Type:    api.ActionOpenLink,
+			Payload: api.ToPayload("3"),
+			Label:   "click me",
+			Link:    "https://www.google.com/",
+		},
+	}) */
+
+	k.AddButton(api.KeyboardButtons{
+		Action: api.KeyboardActionTypeCallback{
+			Type:    api.ActionCallback,
+			Payload: api.ToPayload("btn1"),
+			Label:   "ДАроу",
+		},
+		Color: api.Primary,
+	})
+
+	log.Println(k.Buttons[0][0])
+
+	_, err := vk.SendMessage(api.SendMessage{
+		PeerIDs:  []int{106988557},
+		Message:  "message",
+		RandomID: 0,
+		//Keyboard: k,
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
 
 	/* url, err := oauth.ImplictFlow(oauth.AuthParams{
 		Client_ID: 8117272,
@@ -79,7 +134,7 @@ func main() {
 
 	fmt.Println(url) */
 
-	at, err := vk.GetAttachments(api.GetAttachmentsParams{
+	/* at, err := vk.GetAttachments(api.GetAttachmentsParams{
 		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
 		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Король и Шут - Дагон.mp3"},
 		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx", "C:/Users/a1exCross/Desktop/VKElmaLib/Ответы Караваева.docx"},
@@ -98,7 +153,7 @@ func main() {
 			RandomID:   0,
 			Attachment: at,
 		})
-	}
+	} */
 
 	http.HandleFunc("/callback", clbck.HandleFunc)
 	http.ListenAndServe(":80", nil)
@@ -107,17 +162,21 @@ func main() {
 func MessageFromUser(e callbackApi.Events, obj callbackApi.MessageObject) { //callback функция для отслеживания новых сообщений
 	log.Println("Пользователь с идентификатором", obj.Message.FromID, "отправил сообщение", obj.Message.Text)
 
+	if obj.Message.Payload != nil {
+		log.Println(obj.Message.Payload.Payload)
+	}
+
 	if obj.Message.Geo != nil {
 		log.Println(obj.Message.Geo.Coordinates)
 	}
 
 	if obj.Message.Attachments != nil {
 		for _, v := range obj.Message.Attachments {
-			if v.Type == string(callbackApi.Photo) {
+			if v.Type == callbackApi.Photo {
 				log.Println(v.Photo.GetMaxSizePhotoUrl().Url)
 			}
 
-			if v.Type == string(callbackApi.Video) {
+			if v.Type == callbackApi.Video {
 				r, _ := vk.GetVideo(api.GetVideoParams{
 					OwnerID: v.Video.OwnerID,
 					Videos:  strconv.Itoa(v.Video.OwnerID) + "_" + strconv.Itoa(v.Video.ID),
@@ -126,23 +185,23 @@ func MessageFromUser(e callbackApi.Events, obj callbackApi.MessageObject) { //ca
 				log.Println(r.Response.Items[0].Player)
 			}
 
-			if v.Type == string(callbackApi.Doc) {
+			if v.Type == callbackApi.Doc {
 				log.Println(v.Doc.Title)
 			}
 
-			if v.Type == string(callbackApi.Audio) {
+			if v.Type == callbackApi.Audio {
 				log.Println(v.Audio.Title)
 			}
 
-			if v.Type == string(callbackApi.AudioMessage) {
+			if v.Type == callbackApi.AudioMessage {
 				log.Println(v.AudioMessage.OwnerID)
 			}
 
-			if v.Type == string(callbackApi.Graffiti) {
+			if v.Type == callbackApi.Graffiti {
 				log.Println(v.Graffiti.URL)
 			}
 
-			if v.Type == string(callbackApi.Sticker) {
+			if v.Type == callbackApi.Sticker {
 				log.Println(v.Sticker.AnimationURL)
 			}
 		}
@@ -167,4 +226,28 @@ func MessageDenyy(e callbackApi.Events, obj callbackApi.MessageDenyObject) {
 
 func MessageAlloww(e callbackApi.Events, obj callbackApi.MessageAllowObject) {
 	log.Println(fmt.Sprintf("Пользователь %d разрешил сообщения от сообщества", obj.UserID))
+}
+
+func MessageEventt(e callbackApi.Events, obj callbackApi.MessageEventObject) {
+	log.Println(fmt.Sprintf("Нажата callback кнопка в чат-боте %s", obj.Payload.Payload.Button))
+
+	_, err := vk.SendMessageEventAnswer(api.SendMessageEventAnswerParams{
+		EventID: obj.EventID,
+		UserID:  obj.UserID,
+		PeerID:  obj.PeerID,
+		EventData: api.EventAnswerType{
+			ShowSnackbar: &api.ShowSnackbarAnswerType{
+				Text: "Hello!!",
+			},
+		},
+		/* EventData: api.EventAnswerType{
+			OpenLink: &api.OpenLinkAnswerType{
+				Link: "https://www.google.com",
+			},
+		}, */
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
 }

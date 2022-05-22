@@ -48,6 +48,8 @@ func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(e.Type)
 
+	log.Println(string(data))
+
 	if e.Secret == c.Secret_key {
 
 		c.CallFuncList(data, e)

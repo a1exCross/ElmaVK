@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/a1exCross/ElmaVK/apiErrors"
 )
 
 const auth_url = "https://oauth.vk.com/authorize?"
@@ -154,30 +155,50 @@ type GroupTokens struct {
 	ExpiresIn int          `json:"expires_in"`
 }
 
-func (a *Auth) req_token(code string) GroupTokens {
+func (a *Auth) req_token(code string) (GroupTokens, error) {
 	u := "client_id=" + strconv.Itoa(a.Client_ID) +
 		"&client_secret=" + a.client_secret +
 		"&redirect_uri=" + a.Redirect_URI +
 		"&code=" + code
 
-	req, _ := http.NewRequest("GET", get_token_url+u, nil)
+	req, err := http.NewRequest("GET", get_token_url+u, nil)
+
+	if err != nil {
+		return GroupTokens{}, err
+	}
 
 	res, err := a.Client.Do(req)
 
 	if err != nil {
-		log.Println(err)
+		return GroupTokens{}, err
+	}
+
+	check := apiErrors.GetError(res)
+
+	if check != "ok" {
+		return GroupTokens{}, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
 
+	if err != nil {
+		return GroupTokens{}, err
+	}
+
 	var t GroupTokens
 	err = json.Unmarshal(data, &t)
 
-	return t
+	return t, nil
 }
 
-func (a Auth) GetToken(u *url.URL) GroupTokens {
+func (a Auth) GetToken(u *url.URL) (GroupTokens, error) {
 	code := u.Query().Get("code")
 
-	return a.req_token(code)
+	tokens, err := a.req_token(code)
+
+	if err != nil {
+		return GroupTokens{}, err
+	}
+
+	return tokens, nil
 }

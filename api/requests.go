@@ -26,6 +26,9 @@ func (v VK) Reqeust_api_post(method, param string, data url.Values) (*http.Respo
 		return nil, err
 	}
 
+	/* 	d, _ := ioutil.ReadAll(req.Body)
+	   	log.Println(string(d)) */
+
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	return v.Client.Do(req)

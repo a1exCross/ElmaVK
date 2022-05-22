@@ -32,6 +32,7 @@ type FuncList struct {
 	MessageTypingState func(e Events, obj MessageTypingStateObject)
 	MessageAllow       func(e Events, obj MessageAllowObject)
 	MessageDeny        func(e Events, obj MessageDenyObject)
+	MessageEvent       func(e Events, obj MessageEventObject)
 }
 
 func (c Callback) CallFuncList(data []byte, e Events) {
@@ -48,6 +49,16 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 				log.Println(err)
 			}
 
+			var p *Payload
+
+			err = json.Unmarshal(e.Object, &p)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			obj.Message.Payload = p
+
 			go c.Functions.NewMessage(e, obj)
 		}
 	case MessageReply:
@@ -60,6 +71,16 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 				log.Println(err)
 			}
 
+			var p *Payload
+
+			err = json.Unmarshal(e.Object, &p)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			obj.Payload = p
+
 			go c.Functions.MessageReply(e, obj)
 		}
 	case MessageEdit:
@@ -71,6 +92,16 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			if err != nil {
 				log.Println(err)
 			}
+
+			var p *Payload
+
+			err = json.Unmarshal(e.Object, &p)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			obj.Payload = p
 
 			go c.Functions.MessageEdit(e, obj)
 		}
@@ -112,7 +143,25 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 		}
 	case MessageEvent:
 		{
-			//работа с кнопками
+			var obj MessageEventObject
+
+			err := json.Unmarshal(e.Object, &obj)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			var p Payload
+
+			err = json.Unmarshal(e.Object, &p)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			obj.Payload = &p
+
+			go c.Functions.MessageEvent(e, obj)
 		}
 	}
 }

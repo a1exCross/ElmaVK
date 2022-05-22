@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"github.com/a1exCross/ElmaVK/ApiErrors"
+	"github.com/a1exCross/ElmaVK/apiErrors"
 )
 
 type UserParams struct {
@@ -201,7 +201,7 @@ func (v VK) GetUserByID(u UserGetParams) (User, error) {
 		return User{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := apiErrors.GetError(res)
 
 	if check != "ok" {
 		return User{}, errors.New(check)

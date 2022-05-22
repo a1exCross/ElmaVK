@@ -137,7 +137,7 @@ type AudioMessageAttachment struct {
 }
 
 type Attachments struct {
-	Type         string                 `json:"type"`
+	Type         AttachmentType         `json:"type"`
 	Photo        PhotoAttachment        `json:"photo"`
 	Video        VideoAttachment        `json:"video"`
 	Audio        AudioAttachment        `json:"audio"`
@@ -173,6 +173,7 @@ type MessageObjectMessage struct {
 	PeerID       int                   `json:"peer_id"`
 	RandomID     int                   `json:"random_id"`
 	Text         string                `json:"text"`
+	Payload      *Payload              `json:"payload"`
 }
 
 type MessageAllowObject struct {
@@ -188,6 +189,22 @@ type MessageTypingStateObject struct {
 	State  string `json:"state"`
 	FromID int    `json:"from_id"`
 	ToID   int    `json:"to_id"`
+}
+
+type MessageEventObject struct {
+	UserID  int      `json:"user_id"`
+	PeerID  int      `json:"peer_id"`
+	EventID string   `json:"event_id"`
+	Payload *Payload `json:"payload"`
+}
+
+type PayloadObject struct {
+	Command string `json:"command,omitepmty"`
+	Button  string `json:"button,omitempty"`
+}
+
+type Payload struct {
+	Payload PayloadObject `json:"payload"`
 }
 
 type MessageObjectClientInfo struct {
