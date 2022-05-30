@@ -99,6 +99,7 @@ func (b *Keyboard) AddButton(p KeyboardButtons) {
 	}
 }
 
+//https://vk.com/dev/bots_docs
 func GetKeyboard() Keyboard {
 	return Keyboard{
 		Buttons: make([][]KeyboardButtons, 1),

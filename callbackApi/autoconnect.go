@@ -2,9 +2,9 @@ package callbackApi
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +49,7 @@ func (c *Callback) AutoConnect() (int, error) {
 	}
 
 	if server_id == 0 {
-		u, err := c.BuildRequestCallbackAutoSet()
+		u, err := c.BuildRequestAddCallbackServer()
 
 		if err != nil {
 			return 0, err
@@ -61,8 +61,6 @@ func (c *Callback) AutoConnect() (int, error) {
 			return 0, err
 		}
 
-		log.Println(c.ConfirmationKey)
-
 		res, err := c.Vk.AddCallbackServer(u)
 
 		server_id = res
@@ -72,8 +70,6 @@ func (c *Callback) AutoConnect() (int, error) {
 		}
 
 		log.Println("New server is created with ID =", res)
-
-		//return res, nil
 	}
 
 	settings := setSettings(c.Vk, c.Settings, group.Response[0].ID, server_id)
@@ -132,8 +128,8 @@ func setSettings(v vk.VK, e []EventType, group_id, server_id int) vk.CallbackSet
 	return settings
 }
 
-func (c Callback) BuildRequestCallbackAutoSet() (string, error) {
-	u := ""
+func (c Callback) BuildRequestAddCallbackServer() (string, error) {
+	var u string = ""
 
 	group, err := c.Vk.GetCurrentGroup()
 
@@ -142,10 +138,10 @@ func (c Callback) BuildRequestCallbackAutoSet() (string, error) {
 	}
 
 	if group != nil {
-		u += "group_id=" + strconv.Itoa(group.Response[0].ID)
-	} /* else {
-		return "", errors.New("Group ID is null")
-	} */
+		u += "group_id=" + fmt.Sprint(group.Response[0].ID)
+	} else {
+		return "", errors.New("Required field 'GroupID' is empty, MethodName - BuildRequestAddCallbackServer()")
+	}
 
 	if c.Title == "" {
 		c.Title = "VKGroupELMA365"
@@ -155,15 +151,15 @@ func (c Callback) BuildRequestCallbackAutoSet() (string, error) {
 
 	if c.URL != "" {
 		u += "&url=" + c.URL
-	} /* else {
-		return "", errors.New("URL is null")
-	} */
+	} else {
+		return "", errors.New("Required field 'URL' is empty, MethodName - BuildRequestAddCallbackServer()")
+	}
 
 	if c.Vk.Token != "" {
 		u += "&access_token=" + c.Vk.Token
-	} /* else {
-		return "", errors.New("Token is null")
-	} */
+	} else {
+		return "", errors.New("Auth token is empty")
+	}
 
 	if c.Secret_key == "" {
 		key := random_string()

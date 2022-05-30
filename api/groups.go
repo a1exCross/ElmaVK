@@ -3,11 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math"
-	"strconv"
 
-	"github.com/a1exCross/ElmaVK/apiErrors"
+	"github.com/a1exCross/ElmaVK/ApiErrors"
 )
 
 type group_info struct {
@@ -25,16 +25,24 @@ type GroupInfo struct {
 	Response []group_info `json:"response"`
 }
 
+//https://dev.vk.com/method/groups.get
 func (v VK) GetCurrentGroup() (*GroupInfo, error) {
-	u := "access_token=" + v.Token +
-		"&v=5.131"
+	var u string = ""
+
+	if v.Token != "" {
+		u = "access_token=" + v.Token +
+			"&v=5.131"
+	} else {
+		return nil, errors.New("Auth token is empty")
+	}
+
 	res, err := v.Reqeust_api_get("groups.getById?", u)
 
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -63,10 +71,21 @@ type ConfirmationKey struct {
 	} `json:"response"`
 }
 
+//https://dev.vk.com/method/groups.getCallbackConfirmationCode
 func (v VK) GetConfirmaionKey(group_id int) (string, error) {
-	u := "access_token=" + v.Token +
-		"&group_id=" + strconv.Itoa(group_id) +
-		"&v=" + v.Version
+	var u string = ""
+
+	if group_id != 0 {
+		u += "group_id=" + fmt.Sprint(group_id)
+	} else {
+		return "", errors.New("Required field 'GroupID' is empty, MethodName - GetConfirmationKey()")
+	}
+
+	if v.Token != "" {
+		u = "&access_token=" + v.Token + "&v=" + v.Version
+	} else {
+		return "", errors.New("Auth token is empty")
+	}
 
 	res, err := v.Reqeust_api_get("groups.getCallbackConfirmationCode?", u)
 
@@ -74,7 +93,7 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -113,10 +132,21 @@ type CallbackServersResponse struct {
 	} `json:"response"`
 }
 
+//https://dev.vk.com/method/groups.getCallbackServers
 func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.getCallbackServers
-	u := "access_token=" + v.Token +
-		"&group_id=" + strconv.Itoa(group_id) +
-		"&v=" + v.Version
+	var u string = ""
+
+	if group_id != 0 {
+		u += "group_id=" + fmt.Sprint(group_id)
+	} else {
+		return nil, errors.New("Required field 'GroupID' is empty, MethodName - GetCallbackServers()")
+	}
+
+	if v.Token != "" {
+		u = "&access_token=" + v.Token + "&v=" + v.Version
+	} else {
+		return nil, errors.New("Auth token is empty")
+	}
 
 	res, err := v.Reqeust_api_get("groups.getCallbackServers?", u)
 
@@ -124,7 +154,7 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -147,12 +177,13 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 	return resp.Response.Items, nil
 }
 
-type AutoSetResponse struct {
+type AddCallbackServerResponse struct {
 	Response struct {
 		ServerID int `json:"server_id"`
 	} `json:"response"`
 }
 
+//https://dev.vk.com/method/groups.addCallbackServer
 func (v VK) AddCallbackServer(u string) (int, error) {
 	res, err := v.Reqeust_api_get("groups.addCallbackServer?", u)
 
@@ -160,7 +191,7 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 		return 0, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -172,7 +203,7 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 		return 0, err
 	}
 
-	resp := AutoSetResponse{}
+	resp := AddCallbackServerResponse{}
 
 	err = json.Unmarshal(data, &resp)
 
@@ -187,11 +218,25 @@ type ResponseServerDeleteOrSet struct {
 	Response int `json:"response"`
 }
 
+//https://dev.vk.com/method/groups.deleteCallbackServer
 func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
-	u := "access_token=" + v.Token +
-		"&group_id=" + strconv.Itoa(-group_id) +
-		"&server_id=" + strconv.Itoa(serv_id) +
-		"&v=" + v.Version
+	var u string = ""
+
+	if group_id != 0 {
+		u += "group_id=" + fmt.Sprint(-group_id)
+	} else {
+		return 0, errors.New("Required field 'GroupID' is empty, MethodName - DeleteCallbackServer()")
+	}
+
+	if serv_id != 0 {
+		u += "&server_id=" + fmt.Sprint(serv_id)
+	} else {
+		return 0, errors.New("Required field 'ServerID' is empty, MethodName - DeleteCallbackServer()")
+	}
+
+	if v.Token != "" {
+		u = "&access_token=" + v.Token + "&v=" + v.Version
+	}
 
 	res, err := v.Reqeust_api_get("groups.deleteCallbackServer?", u)
 
@@ -199,7 +244,7 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 		return -1, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -228,14 +273,6 @@ type CallbackSettings struct {
 	CallbackEventSettings
 }
 
-type CallbackEvents string
-
-const (
-	MessageNew   CallbackEvents = "message_new"
-	MessageReply CallbackEvents = "message_reply"
-	MessageEdit  CallbackEvents = "message_edit"
-)
-
 type CallbackEventSettings struct {
 	MessageNew         bool `json:"message_new"`
 	MessageReply       bool `json:"message_reply"`
@@ -250,36 +287,39 @@ func (v VK) GetCallbackSettingsParams() CallbackSettings {
 	return CallbackSettings{}
 }
 
+//https://dev.vk.com/method/groups.setCallbackSettings
 func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
-	u := "access_token=" + v.Token +
-		"&group_id=" + strconv.Itoa(int(math.Abs(float64(m.GroupID)))) +
-		"&server_id=" + strconv.Itoa(m.ServerID) +
-		"&message_new=" + strconv.FormatBool(m.MessageNew) +
-		"&v=" + v.Version
+	var u string = ""
 
-	//if m.MessageReply != false {
-	u += "&message_reply=" + strconv.FormatBool(m.MessageReply)
-	//}
+	if m.GroupID != 0 {
+		u += "group_id=" + fmt.Sprint(int(math.Abs(float64(m.GroupID))))
+	} else {
+		return 0, errors.New("Required field 'GroupID' is empty, MethodName - SetCallbackSettings()")
+	}
 
-	//if m.MessageEdit != false {
-	u += "&message_edit=" + strconv.FormatBool(m.MessageEdit)
-	//}
+	if m.ServerID != 0 {
+		u += "&server_id=" + fmt.Sprint(m.ServerID)
+	}
 
-	//if m.MessageAllow != false {
-	u += "&message_allow=" + strconv.FormatBool(m.MessageAllow)
-	//}
+	u += "&message_new=" + fmt.Sprint(m.MessageNew)
 
-	//if m.MessageDeny != false {
-	u += "&message_deny=" + strconv.FormatBool(m.MessageDeny)
-	//}
+	u += "&message_reply=" + fmt.Sprint(m.MessageReply)
 
-	//if m.MessageEvent != false {
-	u += "&message_event=" + strconv.FormatBool(m.MessageEvent)
-	//}
+	u += "&message_edit=" + fmt.Sprint(m.MessageEdit)
 
-	//if m.MessageTypingState != false {
-	u += "&message_typing_state=" + strconv.FormatBool(m.MessageTypingState)
-	//}
+	u += "&message_allow=" + fmt.Sprint(m.MessageAllow)
+
+	u += "&message_deny=" + fmt.Sprint(m.MessageDeny)
+
+	u += "&message_event=" + fmt.Sprint(m.MessageEvent)
+
+	u += "&message_typing_state=" + fmt.Sprint(m.MessageTypingState)
+
+	if v.Token != "" {
+		u += "&access_token=" + v.Token + "&v=" + v.Version
+	} else {
+		return 0, errors.New("Auth token is empty")
+	}
 
 	res, err := v.Reqeust_api_get("groups.setCallbackSettings?", u)
 
@@ -287,7 +327,7 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 		return -1, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)

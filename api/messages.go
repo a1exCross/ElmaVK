@@ -13,40 +13,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
-	"github.com/a1exCross/ElmaVK/apiErrors"
+	"github.com/a1exCross/ElmaVK/ApiErrors"
 )
 
-type SendMessage struct {
-	UserID          int
-	UserIDs         []int
-	PeerID          int
-	PeerIDs         []int
-	Domain          string
-	ChatID          int
-	Message         string
-	RandomID        int
-	Guid            int
-	Attachment      []string
-	ReplyTo         int
-	ForwardMessages []int
-	//Forward json object
-	StickerID int
-	GroupID   int
-	Token     string
-	Keyboard  Keyboard `json:"keyboard"`
-	//Template text
-	Payload string
-	//ContentSource text json
-	DontParseLink   bool
-	DisableMentions bool
-	Intent          string
-	SubscribeID     int
-}
-
-type ResponseSendMessage struct {
+type MessagesSendResponse struct {
 	//Response int `json:"response"`
 	Response []struct {
 		PeerID                int `json:"peer_id"`
@@ -91,38 +63,52 @@ type SendMessageEventAnswerResponse struct {
 	Response int `json:"response"`
 }
 
+//https://dev.vk.com/method/messages.sendMessageEventAnswer
 func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageEventAnswerResponse, error) {
 	data := url.Values{}
 
 	if p.EventID != "" {
 		data.Set("event_id", p.EventID)
 	} else {
-		return SendMessageEventAnswerResponse{}, errors.New("Required field EventID is empty, Method:SendMessageEventAnswer")
+		return SendMessageEventAnswerResponse{}, errors.New("Required field 'EventID' is empty, MethodName - SendMessageEventAnswer()")
 	}
 
 	if p.PeerID != 0 {
-		data.Set("peer_id", strconv.Itoa(p.PeerID))
+		data.Set("peer_id", fmt.Sprint(p.PeerID))
 	} else {
-		return SendMessageEventAnswerResponse{}, errors.New("Required field PeerID is empty, Method:SendMessageEventAnswer")
+		return SendMessageEventAnswerResponse{}, errors.New("Required field 'PeerID' is empty, MethodName - SendMessageEventAnswer()")
 	}
 
 	if p.UserID != 0 {
-		data.Set("user_id", strconv.Itoa(p.UserID))
+		data.Set("user_id", fmt.Sprint(p.UserID))
 	} else {
-		return SendMessageEventAnswerResponse{}, errors.New("Required field UserID is empty, Method:SendMessageEventAnswer")
+		return SendMessageEventAnswerResponse{}, errors.New("Required field 'UserID' is empty, MethodName - SendMessageEventAnswer()")
 	}
+
+	var prm string
 
 	if p.EventData.OpenLink != nil {
 		p.EventData.Type = "open_link"
+		prm = "{" + toJsonParam("link", p.EventData.OpenLink.Link) + "," + toJsonParam("type", p.EventData.Type) + "}"
 	}
 
 	if p.EventData.OpenApp != nil {
 		p.EventData.Type = "open_app"
+		if p.EventData.Type == "open_app" {
+			prm = "{" + toJsonParam("app_id", fmt.Sprint(p.EventData.OpenApp.AppID)) + "," +
+				toJsonParam("owner_id", fmt.Sprint(p.EventData.OpenApp.OwnerID)) + "," +
+				toJsonParam("hash", p.EventData.OpenApp.Hash) + "}"
+		}
 	}
 
 	if p.EventData.ShowSnackbar != nil {
 		p.EventData.Type = "show_snackbar"
+		if p.EventData.Type == "show_snackbar" {
+			prm = "{" + toJsonParam("text", p.EventData.ShowSnackbar.Text) + "," + toJsonParam("type", p.EventData.Type) + "}"
+		}
 	}
+
+	data.Set("event_data", prm)
 
 	var u string = ""
 
@@ -132,31 +118,13 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 		return SendMessageEventAnswerResponse{}, errors.New("Auth token is empty")
 	}
 
-	var prm string
-
-	if p.EventData.Type == "open_link" {
-		prm = "{" + toJsonParam("link", p.EventData.OpenLink.Link) + "," + toJsonParam("type", p.EventData.Type) + "}"
-	}
-
-	if p.EventData.Type == "show_snackbar" {
-		prm = "{" + toJsonParam("text", p.EventData.ShowSnackbar.Text) + "," + toJsonParam("type", p.EventData.Type) + "}"
-	}
-
-	if p.EventData.Type == "open_app" {
-		prm = "{" + toJsonParam("app_id", strconv.Itoa(p.EventData.OpenApp.AppID)) + "," +
-			toJsonParam("owner_id", strconv.Itoa(p.EventData.OpenApp.OwnerID)) + "," +
-			toJsonParam("hash", p.EventData.OpenApp.Hash) + "}"
-	}
-
-	data.Set("event_data", prm)
-
 	res, err := v.Reqeust_api_post("messages.sendMessageEventAnswer?", u, data)
 
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return SendMessageEventAnswerResponse{}, errors.New(check)
@@ -179,10 +147,6 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 	return t, nil
 }
 
-func (v VK) GetSendMessageParam() SendMessage {
-	return SendMessage{}
-}
-
 type GetAttachmentsParams struct {
 	FilePaths     []string
 	PeerID        int
@@ -190,11 +154,371 @@ type GetAttachmentsParams struct {
 	OriginalVideo bool
 }
 
+type MessagesGetByConversationMessageIDParams struct {
+	PeerID                 int      `json:"peer_id"`
+	ConversationMessageIDs []int    `json:"conversation_messages_id"`
+	Extended               bool     `json:"extended"`
+	Feilds                 []string `json:"fields,omitempty"`
+	GroupID                int      `json:"group_id"`
+}
+
+type MessagesGetByConversationMessageIDResponse struct {
+	Response struct {
+		Count int `json:"count"`
+		Items []struct {
+			Date                  int           `json:"date"`
+			FromID                int           `json:"from_id"`
+			ID                    int           `json:"id"`
+			Out                   int           `json:"out"`
+			Attachments           []interface{} `json:"attachments"`
+			ConversationMessageID int           `json:"conversation_message_id"`
+			FwdMessages           []interface{} `json:"fwd_messages"`
+			Important             bool          `json:"important"`
+			IsHidden              bool          `json:"is_hidden"`
+			PeerID                int           `json:"peer_id"`
+			RandomID              int           `json:"random_id"`
+			Text                  string        `json:"text"`
+		} `json:"items"`
+		Profiles []struct {
+			ID         int    `json:"id"`
+			Sex        int    `json:"sex"`
+			ScreenName string `json:"screen_name"`
+			Photo50    string `json:"photo_50"`
+			Photo100   string `json:"photo_100"`
+			OnlineInfo struct {
+				Visible  bool `json:"visible"`
+				LastSeen int  `json:"last_seen"`
+				IsOnline bool `json:"is_online"`
+				AppID    int  `json:"app_id"`
+				IsMobile bool `json:"is_mobile"`
+			} `json:"online_info"`
+			Online          int    `json:"online"`
+			OnlineMobile    int    `json:"online_mobile"`
+			OnlineApp       int    `json:"online_app"`
+			FirstName       string `json:"first_name"`
+			LastName        string `json:"last_name"`
+			CanAccessClosed bool   `json:"can_access_closed"`
+			IsClosed        bool   `json:"is_closed"`
+		} `json:"profiles"`
+		Groups []struct {
+			ID         int    `json:"id"`
+			Name       string `json:"name"`
+			ScreenName string `json:"screen_name"`
+			IsClosed   int    `json:"is_closed"`
+			Type       string `json:"type"`
+			Photo50    string `json:"photo_50"`
+			Photo100   string `json:"photo_100"`
+			Photo200   string `json:"photo_200"`
+		} `json:"groups"`
+	} `json:"response"`
+}
+
+//https://dev.vk.com/method/messages.getByConversationMessageId
+func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessageIDParams) (MessagesGetByConversationMessageIDResponse, error) {
+	data := url.Values{}
+
+	if p.PeerID != 0 {
+		data.Set("peer_id", fmt.Sprint(p.PeerID))
+	} else {
+		return MessagesGetByConversationMessageIDResponse{}, errors.New("Required field 'PeerID' is empty, MethodName - MessagesGetByConversationMessageID()")
+	}
+
+	if p.ConversationMessageIDs != nil {
+		conv_ids := ""
+		for i, v := range p.ConversationMessageIDs {
+			if i > 0 {
+				conv_ids += ","
+			}
+			conv_ids += fmt.Sprint(v)
+		}
+		data.Set("conversation_message_ids", conv_ids)
+	} else {
+		return MessagesGetByConversationMessageIDResponse{}, errors.New("Required field 'ConversationMessageIDs' is empty, MethodName - MessagesGetByConversationMessageID()")
+	}
+
+	if p.Feilds != nil {
+		fields := ""
+		for i, v := range p.Feilds {
+			if i > 0 {
+				fields += ","
+			}
+			fields += fmt.Sprint(v)
+		}
+		data.Set("fields", fields)
+	}
+
+	data.Set("extended", fmt.Sprint(p.Extended))
+
+	if p.GroupID != 0 {
+		data.Set("group_id", fmt.Sprint(p.GroupID))
+	}
+
+	var u string = ""
+
+	if v.Token != "" {
+		u += "&v=" + v.Version + "&access_token=" + v.Token
+	} else {
+		return MessagesGetByConversationMessageIDResponse{}, errors.New("Auth token is empty")
+	}
+
+	res, err := v.Reqeust_api_post("messages.getByConversationMessageId?", u, data)
+
+	if err != nil {
+		return MessagesGetByConversationMessageIDResponse{}, err
+	}
+
+	check := ApiErrors.GetError(res)
+
+	if check != "ok" {
+		return MessagesGetByConversationMessageIDResponse{}, errors.New(check)
+	}
+
+	dat, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return MessagesGetByConversationMessageIDResponse{}, err
+	}
+
+	var t MessagesGetByConversationMessageIDResponse
+
+	err = json.Unmarshal(dat, &t)
+
+	if err != nil {
+		return MessagesGetByConversationMessageIDResponse{}, err
+	}
+
+	return t, nil
+}
+
+type MessagesEditParams struct {
+	PeerID                int
+	ConversationMessageID int
+	Message               string
+	Attachment            []string
+	GroupID               int
+	Keyboard              Keyboard `json:"keyboard"`
+	Template              string
+	DontParseLinks        bool
+	DisableMentions       bool
+	MessageID             int
+	Lat                   string
+	Long                  string
+	KeepForwardMessages   bool
+	KeepSnipets           bool
+}
+
+type MessagesEditResponse struct {
+	Response int `json:"response"`
+}
+
+//https://dev.vk.com/method/messages.edit
+func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
+	data := url.Values{}
+
+	if p.PeerID != 0 {
+		data.Set("peer_id", fmt.Sprint(p.PeerID))
+	} else {
+		return 0, errors.New("Required field 'PeerID' is empty, MethodName - MessagesEdit()")
+	}
+
+	if p.ConversationMessageID != 0 {
+		data.Set("conversation_message_id", fmt.Sprint(p.ConversationMessageID))
+	}
+
+	if p.GroupID != 0 {
+		data.Set("group_id", fmt.Sprint(p.GroupID))
+	}
+
+	if p.Attachment != nil {
+		var att = ""
+		for i := 0; i < len(p.Attachment); i++ {
+			if i > 0 {
+				att += ","
+			}
+			att += p.Attachment[i]
+		}
+		data.Set("attachment", att)
+	}
+
+	if p.Message != "" {
+		data.Set("message", p.Message)
+	} else if p.Attachment == nil {
+		return 0, errors.New("Required field 'Message' is empty, MethodName - MessagesEdit()")
+	}
+
+	if p.Template != "" {
+		data.Set("template", p.Template)
+	}
+
+	if p.MessageID != 0 {
+		data.Set("message_id", fmt.Sprint(p.MessageID))
+	}
+
+	data.Set("dont_parse_links", fmt.Sprint(p.DontParseLinks))
+
+	data.Set("disable_mentions", fmt.Sprint(p.DisableMentions))
+
+	if p.Lat != "" {
+		data.Set("lat", p.Lat)
+	}
+
+	if p.Long != "" {
+		data.Set("long", p.Long)
+	}
+
+	data.Set("keep_forward_messages", fmt.Sprint(p.KeepForwardMessages))
+
+	data.Set("keep_snippets", fmt.Sprint(p.KeepSnipets))
+
+	if p.Keyboard.Buttons == nil {
+		p.Keyboard.Buttons = [][]KeyboardButtons{}
+	}
+
+	ps, err := json.Marshal(p.Keyboard)
+
+	if err != nil {
+		return 0, err
+	}
+
+	data.Set("keyboard", string(ps))
+
+	var u string = ""
+
+	if v.Token != "" {
+		u += "&v=" + v.Version + "&access_token=" + v.Token
+	} else {
+		return 0, errors.New("Auth token is empty")
+	}
+
+	res, err := v.Reqeust_api_post("messages.edit?", u, data)
+
+	if err != nil {
+		return 0, err
+	}
+
+	check := ApiErrors.GetError(res)
+
+	if check != "ok" {
+		return 0, errors.New(check)
+	}
+
+	dat, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return 0, err
+	}
+
+	var t MessagesEditResponse
+
+	err = json.Unmarshal(dat, &t)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return t.Response, nil
+}
+
+type MessagesDeleteParams struct {
+	MessageIDs   []int
+	GroupID      int
+	DeleteForAll bool
+	PeerID       int
+	//Cmids        []int
+}
+
+type MessagesDeleteResponse struct {
+	Response json.RawMessage `json:"response"`
+}
+
+//https://dev.vk.com/method/messages.delete
+func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
+	data := url.Values{}
+
+	var msg_ids = ""
+
+	if p.MessageIDs != nil {
+		for i, v := range p.MessageIDs {
+			if i > 0 {
+				msg_ids += ","
+			}
+			msg_ids += fmt.Sprint(v)
+		}
+	} else {
+		return nil, errors.New("Required field 'MessagesIDs' is empty, MethodName - MessagesDelete()")
+	}
+
+	if p.PeerID != 0 {
+		data.Set("peer_id", fmt.Sprint(p.PeerID))
+	} else {
+		return nil, errors.New("Required field 'PeerID' is empty, MethodName - MessagesDelete()")
+	}
+
+	if p.GroupID != 0 {
+		data.Set("group_id", fmt.Sprint(p.GroupID))
+	}
+
+	data.Set("cmids", msg_ids)
+
+	data.Set("delete_for_all", fmt.Sprint(p.DeleteForAll))
+
+	var u string = ""
+
+	if v.Token != "" {
+		u += "&v=" + v.Version + "&access_token=" + v.Token
+	} else {
+		return nil, errors.New("Auth token is empty")
+	}
+
+	res, err := v.Reqeust_api_post("messages.delete?", u, data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	check := ApiErrors.GetError(res)
+
+	if check != "ok" {
+		return nil, errors.New(check)
+	}
+
+	dat, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var t MessagesDeleteResponse
+
+	err = json.Unmarshal(dat, &t)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var arr map[string]int
+
+	err = json.Unmarshal(t.Response, &arr)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	return arr, nil
+}
+
+//https://dev.vk.com/reference/objects/attachments-message
 func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
 	var at []string
+
+	group_id, err := v.GetCurrentGroup()
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, path := range p.FilePaths {
 		file, err := os.Open(path)
@@ -206,10 +530,8 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 		defer file.Close()
 
 		filename := filepath.Base(path)
-		log.Println(filename)
 
 		ext := filepath.Ext(filename)
-		fmt.Println(ext)
 
 		ext = strings.ToLower(ext)
 
@@ -229,15 +551,14 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			(ext == ".3gp" && !p.OriginalVideo) || (ext == ".mpeg" && !p.OriginalVideo) ||
 			(ext == ".mov" && !p.OriginalVideo) || (ext == ".flw" && !p.OriginalVideo) ||
 			(ext == ".wmv" && !p.OriginalVideo) /* || ext == ".mp3"  */ {
+
 			title := strings.Replace(filename, ext, "", len(ext))
 
-			log.Println(title)
-
-			r, err = v.SaveVideo(SaveVideoParam{
+			r, err = v.SaveVideo(SaveVideoParams{
 				Name:      title,
 				IsPrivate: true,
 				Wallpost:  false,
-				GroupID:   203374987,
+				GroupID:   group_id.Response[0].ID,
 			})
 
 			if err != nil {
@@ -258,10 +579,10 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 		}
 
 		if attachment_type == "" {
-			return nil, errors.New("Не поддерживаемый тип файла")
+			return nil, errors.New("This file type is not supported")
 		}
 
-		part, err := writer.CreateFormFile("file", filepath.Base(file.Name())) // или file
+		part, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
 
 		if err != nil {
 			return nil, err
@@ -285,7 +606,7 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			return nil, err
 		}
 
-		check := apiErrors.GetError(res)
+		check := ApiErrors.GetError(res)
 
 		if check != "ok" {
 			return nil, errors.New(check)
@@ -325,7 +646,9 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 				return nil, err
 			}
 
-			s, err := v.SaveDoc(r.File)
+			s, err := v.SaveDoc(SaveDocParams{
+				File: r.File,
+			})
 
 			if err != nil {
 				return nil, err
@@ -342,178 +665,245 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 	return at, nil
 }
 
-//https://dev.vk.com/method/messages.send
-func (v VK) SendMessage(s SendMessage) (ResponseSendMessage, error) {
-	var u string = ""
+type MessagesSendParams struct {
+	UserID          int
+	UserIDs         []int
+	PeerID          int
+	PeerIDs         []int
+	Domain          string
+	ChatID          int
+	Message         string
+	RandomID        int
+	Guid            int
+	Attachment      []string
+	ReplyTo         int
+	ForwardMessages []int
+	//Forward json object
+	StickerID int
+	//GroupID   int
+	Keyboard Keyboard `json:"keyboard"`
+	Template string
+	Payload  string
+	//ContentSource text json
+	DontParseLinks  bool
+	DisableMentions bool
+	//Intent          string
+	//SubscribeID int
+	Lat  string
+	Long string
+}
 
+//https://dev.vk.com/method/messages.send
+func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponse, error) { //подумать над возвраащемым значением
 	data := url.Values{}
 
-	if s.UserID != 0 {
-		//u += "user_id=" + strconv.Itoa(s.UserID)
-		data.Set("user_id", strconv.Itoa(s.UserID))
-	} /* else {
-		return nil, errors.New("User ID is null")
-	} */
+	if p.UserID != 0 {
+		data.Set("user_id", fmt.Sprint(p.UserID))
+	}
 
-	if len(s.UserIDs) > 0 {
+	if p.UserIDs != nil {
 		var ids = ""
-		for i := 0; i < len(s.UserIDs); i++ {
+		for i := 0; i < len(p.UserIDs); i++ {
 			if i > 0 {
 				ids += ","
 			}
-			ids += strconv.Itoa(s.UserIDs[i])
+			ids += fmt.Sprint(p.UserIDs[i])
 		}
 		data.Set("user_ids", ids)
 	}
 
-	if s.PeerID != 0 {
-		//u += "user_id=" + strconv.Itoa(s.UserID)
-		data.Set("peer_id", strconv.Itoa(s.PeerID))
-	} /* else {
-		return nil, errors.New("User ID is null")
-	} */
+	if p.PeerID != 0 {
+		data.Set("peer_id", fmt.Sprint(p.PeerID))
+	}
 
-	if len(s.PeerIDs) > 0 {
+	if p.PeerIDs != nil {
 		var ids = ""
-		for i := 0; i < len(s.PeerIDs); i++ {
+		for i := 0; i < len(p.PeerIDs); i++ {
 			if i > 0 {
 				ids += ","
 			}
-			ids += strconv.Itoa(s.PeerIDs[i])
+			ids += fmt.Sprint(p.PeerIDs[i])
 		}
 		data.Set("peer_ids", ids)
 	}
 
-	if s.Domain != "" {
-		//u += "&message=" + url.QueryEscape(s.Message)
-		data.Set("domain", s.Domain)
+	if p.Domain != "" {
+		data.Set("domain", p.Domain)
 	}
 
-	if s.ChatID != 0 {
-		data.Set("chat_id", strconv.Itoa(s.ChatID))
+	if p.ChatID != 0 {
+		data.Set("chat_id", fmt.Sprint(p.ChatID))
 	}
 
-	if s.Message != "" {
-		//u += "&message=" + url.QueryEscape(s.Message)
-		data.Set("message", url.QueryEscape(s.Message))
-	} /* else {
-		return nil, errors.New("Message text is null")
-	} */
-
-	if s.Guid != 0 {
-		data.Set("guid", strconv.Itoa(s.Guid))
+	if p.Message != "" {
+		data.Set("message", url.QueryEscape(p.Message))
+	} else if p.Attachment == nil {
+		return MessagesSendResponse{}, errors.New("Required field 'Message' is empty, MethodName - MessagesSend()")
 	}
 
-	if len(s.Attachment) > 0 {
+	if p.ForwardMessages != nil {
+		var frw_msg = ""
+		for i := 0; i < len(p.ForwardMessages); i++ {
+			if i > 0 {
+				frw_msg += ","
+			}
+			frw_msg += fmt.Sprint(p.ForwardMessages[i])
+		}
+		data.Set("forward_messages", frw_msg)
+	}
+
+	if p.Guid != 0 {
+		data.Set("guid", fmt.Sprint(p.Guid))
+	}
+
+	if p.Attachment != nil {
 		var att = ""
-		for i := 0; i < len(s.Attachment); i++ {
+		for i := 0; i < len(p.Attachment); i++ {
 			if i > 0 {
 				att += ","
 			}
-			att += s.Attachment[i]
+			att += p.Attachment[i]
 		}
 		data.Set("attachment", att)
 	}
 
-	if s.Keyboard.Buttons == nil {
-		s.Keyboard.Buttons = [][]KeyboardButtons{}
+	if p.Keyboard.Buttons == nil {
+		p.Keyboard.Buttons = [][]KeyboardButtons{}
 	}
 
-	//s.Keyboard.OneTime = true
+	ps, err := json.Marshal(p.Keyboard)
 
-	ps, _ := json.Marshal(s.Keyboard)
+	if err != nil {
+		return MessagesSendResponse{}, err
+	}
 
 	data.Set("keyboard", string(ps))
 
-	log.Println(data)
+	data.Set("random_id", fmt.Sprint(p.RandomID))
 
-	//os.Exit(1)
+	if p.Template != "" {
+		data.Set("template", p.Template)
+	}
 
-	data.Set("random_id", strconv.Itoa(s.RandomID))
+	data.Set("dont_parse_links", fmt.Sprint(p.DontParseLinks))
+
+	data.Set("disable_mentions", fmt.Sprint(p.DisableMentions))
+
+	if p.Lat != "" {
+		data.Set("lat", p.Lat)
+	}
+
+	if p.Long != "" {
+		data.Set("long", p.Long)
+	}
+
+	if p.ReplyTo != 0 {
+		data.Set("reply_to", fmt.Sprint(p.ReplyTo))
+	}
+
+	if p.Payload != "" {
+		data.Set("payload", p.Payload)
+	}
+
+	var u string = ""
 
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
-	} /* else {
-		return nil, errors.New("Token group is null")
-	} */
+	} else {
+		return MessagesSendResponse{}, errors.New("Auth token is empty")
+	}
 
 	res, err := v.Reqeust_api_post("messages.send?", u, data)
 
 	if err != nil {
-		return ResponseSendMessage{}, err
+		return MessagesSendResponse{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
-		return ResponseSendMessage{}, errors.New(check)
+		return MessagesSendResponse{}, errors.New(check)
 	}
 
-	dat, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return ResponseSendMessage{}, err
+		return MessagesSendResponse{}, err
 	}
 
-	log.Println(string(dat))
+	var t MessagesSendResponse
 
-	var t ResponseSendMessage
-
-	err = json.Unmarshal(dat, &t)
+	err = json.Unmarshal(body, &t)
 
 	if err != nil {
-		return ResponseSendMessage{}, err
+		return MessagesSendResponse{}, err
 	}
-
-	log.Println(t)
 
 	return t, nil
 }
 
-type SaveVideoParam struct {
-	Name          string
-	Description   string
-	IsPrivate     bool
-	Wallpost      bool
-	Link          string
-	GroupID       int
-	AlbumID       int
-	PrivacyView   string
-	PrivacComment string
-	NoComments    bool
-	Repeat        bool
-	Compression   bool
+type SaveVideoParams struct {
+	Name           string
+	Description    string
+	IsPrivate      bool
+	Wallpost       bool
+	Link           string
+	GroupID        int
+	AlbumID        int
+	PrivacyView    string
+	PrivacyComment string
+	NoComments     bool
+	Repeat         bool
+	//Compression    bool
 }
 
 //https://dev.vk.com/method/video.save
-func (v VK) SaveVideo(p SaveVideoParam) (SaveVideoResponse, error) {
-	var u string = ""
+func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
+	data := url.Values{}
 
 	if p.Name != "" {
-		u += "name=" + url.QueryEscape(p.Name) //пробелы убрать
+		data.Set("name", url.QueryEscape(p.Name))
 	}
 
-	u += "&is_private=1" //+ strconv.FormatBool(p.IsPrivate)
+	data.Set("is_private", fmt.Sprint(p.IsPrivate))
 
-	//u += "&description=ab"
+	if p.Description != "" {
+		data.Set("description", p.Description)
+	}
 
-	u += "&wallpost=0" //+ strconv.FormatBool(p.Wallpost)
+	data.Set("wallpost", fmt.Sprint(p.Wallpost))
 
 	if p.GroupID != 0 {
-		u += "&group_id=" + strconv.Itoa(p.GroupID)
+		data.Set("group_id", fmt.Sprint(p.GroupID))
 	}
 
-	/* if f != "" {
-		u += "file=" + url.QueryEscape(f)
-	} */
+	if p.Link != "" {
+		data.Set("link", p.Link)
+	}
 
-	if v.Token != "" {
+	if p.AlbumID != 0 {
+		data.Set("album_id", fmt.Sprint(p.AlbumID))
+	}
+
+	if p.PrivacyComment != "" {
+		data.Set("privacy_comment", p.PrivacyComment)
+	}
+
+	if p.PrivacyView != "" {
+		data.Set("privacy_view", p.PrivacyView)
+	}
+
+	data.Set("no_comments", fmt.Sprint(p.NoComments))
+
+	data.Set("repeat", fmt.Sprint(p.Repeat))
+
+	var u string = ""
+
+	if v.UserToken != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.UserToken
+	} else {
+		return SaveVideoResponse{}, errors.New("Auth token is empty")
 	}
-
-	/* else {
-		return nil, errors.New("Token group is null")
-	} */
 
 	res, err := v.Reqeust_api_get("video.save?", u)
 
@@ -521,25 +911,21 @@ func (v VK) SaveVideo(p SaveVideoParam) (SaveVideoResponse, error) {
 		return SaveVideoResponse{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return SaveVideoResponse{}, errors.New(check)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
 		return SaveVideoResponse{}, err
 	}
 
-	/* 	log.Println(string(data))
-
-	   	os.Exit(1) */
-
 	var r SaveVideoResponse
 
-	err = json.Unmarshal(data, &r)
+	err = json.Unmarshal(body, &r)
 
 	if err != nil {
 		return SaveVideoResponse{}, err
@@ -559,22 +945,23 @@ type SaveVideoResponse struct {
 	} `json:"response"`
 }
 
-func (v VK) GetMessagesUploadServerDoc(tp string, peer_id int) (string, error) {
+//https://dev.vk.com/method/docs.getMessagesUploadServer
+func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, error) {
 	var u string = ""
 
-	if tp != "" {
-		u += "type=" + tp
+	if doc_type != "" {
+		u += "type=" + doc_type
 	}
 
 	if peer_id != 0 {
-		u += "&peer_id=" + strconv.Itoa(peer_id)
+		u += "&peer_id=" + fmt.Sprint(peer_id)
 	}
 
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
-	} /*  else {
-		return nil, errors.New("Token group is null")
-	} */
+	} else {
+		return "", errors.New("Auth token is empty")
+	}
 
 	res, err := v.Reqeust_api_get("docs.getMessagesUploadServer?", u)
 
@@ -582,13 +969,13 @@ func (v VK) GetMessagesUploadServerDoc(tp string, peer_id int) (string, error) {
 		return "", err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
 		return "", err
@@ -596,7 +983,7 @@ func (v VK) GetMessagesUploadServerDoc(tp string, peer_id int) (string, error) {
 
 	var g GetMessagesUploadServerDocResponse
 
-	err = json.Unmarshal(data, &g)
+	err = json.Unmarshal(body, &g)
 
 	if err != nil {
 		return "", err
@@ -609,14 +996,14 @@ type ResponseAfterUploadDoc struct {
 	File string `json:"file"`
 }
 
-func (v VK) GetMessagesUploadServerAudio() (string, error) {
+/* func (v VK) GetMessagesUploadServerAudio() (string, error) {
 	var u string = ""
 
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
-	} /*  else {
-		return nil, errors.New("Token group is null")
-	} */
+	} else {
+		return "", errors.New("Token group is null")
+	}
 
 	res, err := v.Reqeust_api_get("audio.getUploadServer?", u)
 
@@ -624,7 +1011,7 @@ func (v VK) GetMessagesUploadServerAudio() (string, error) {
 		return "", err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -646,6 +1033,7 @@ func (v VK) GetMessagesUploadServerAudio() (string, error) {
 
 	return g.UploadURL, nil
 }
+*/
 
 type GetMessagesUploadServerAudioResponse struct {
 	UploadURL string `json:"upload_url"`
@@ -668,18 +1056,19 @@ type GetMessagesUploadServerPhoto struct {
 	GetMessagesUploadServerPhotoResponse `json:"response"`
 }
 
+//https://dev.vk.com/method/photos.getMessagesUploadServer
 func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 	var u string = ""
 
 	if peer_id != 0 {
-		u += "peer_id=" + strconv.Itoa(peer_id)
+		u += "peer_id=" + fmt.Sprint(peer_id)
 	}
 
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
-	} /*  else {
-		return nil, errors.New("Token group is null")
-	} */
+	} else {
+		return "", errors.New("Auth token is empty")
+	}
 
 	res, err := v.Reqeust_api_get("photos.getMessagesUploadServer?", u)
 
@@ -687,7 +1076,7 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -734,63 +1123,71 @@ type ResponseSaveMessagesPhoto struct {
 	HasTags   bool         `json:"has_tags"`
 }
 
-func (v VK) SaveDoc(f string) (SaveDoc, error) {
+type SaveDocParams struct {
+	File  string
+	Title string
+	/* 	Tags       string
+	   	ReturnTags bool */
+}
+
+//https://dev.vk.com/method/docs.save
+func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
+	data := url.Values{}
+
+	if p.File != "" {
+		data.Set("file", fmt.Sprint(p.File))
+	} else {
+		return SaveDocResponse{}, errors.New("Required field 'File' is empty, MethodName - SaveDoc()")
+	}
+
+	/* 	data.Set("return_tags", fmt.Sprint(p.ReturnTags))
+
+	   	if p.Tags != "" {
+	   		data.Set("tags", p.Tags)
+	   	} */
+
+	if p.Title != "" {
+		data.Set("title", p.Title)
+	}
+
 	var u string = ""
-
-	/* if Hash != "" {
-		u += "hash=" + Hash
-	}
-
-	if Photo != "" {
-		u += "&photo=" + Photo
-	}
-
-	if Server != 0 {
-		u += "&server=" + strconv.Itoa(Server)
-	} */
-
-	if f != "" {
-		u += "file=" + url.QueryEscape(f)
-	}
 
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
+	} else {
+		return SaveDocResponse{}, errors.New("Auth token is empty")
 	}
 
-	/* else {
-		return nil, errors.New("Token group is null")
-	} */
-
-	res, err := v.Reqeust_api_get("docs.save?", u)
+	res, err := v.Reqeust_api_post("docs.save?", u, data)
 
 	if err != nil {
-		return SaveDoc{}, err
+		return SaveDocResponse{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
-		return SaveDoc{}, errors.New(check)
+		return SaveDocResponse{}, errors.New(check)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return SaveDoc{}, err
+		return SaveDocResponse{}, err
 	}
 
-	var p SaveDoc
+	var r SaveDocResponse
 
-	err = json.Unmarshal(data, &p)
+	err = json.Unmarshal(body, &r)
 
 	if err != nil {
-		return SaveDoc{}, err
+		return SaveDocResponse{}, err
 	}
 
-	return p, nil
+	return r, nil
 }
 
-type SaveDoc struct {
+type SaveDocResponse struct {
 	Response struct {
 		Type string `json:"type"`
 		Doc  struct {
@@ -806,60 +1203,60 @@ type SaveDoc struct {
 	} `json:"response"`
 }
 
-type SaveMessagesPhoto struct {
+type SaveMessagesPhotoResponse struct {
 	Response []ResponseSaveMessagesPhoto `json:"response"`
 }
 
-func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto, error) {
-	var u string = ""
+//https://dev.vk.com/method/photos.saveMessagesPhoto
+func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhotoResponse, error) {
+	data := url.Values{}
 
 	if Hash != "" {
-		u += "hash=" + Hash
+		data.Set("hash", Hash)
 	}
 
 	if Photo != "" {
-		u += "&photo=" + Photo
+		data.Set("photo", Photo)
 	}
 
 	if Server != 0 {
-		u += "&server=" + strconv.Itoa(Server)
+		data.Set("server", fmt.Sprint(Server))
 	}
 
+	var u string = ""
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
+	} else {
+		return SaveMessagesPhotoResponse{}, errors.New("Auth token is empty")
 	}
 
-	/* else {
-		return nil, errors.New("Token group is null")
-	} */
-
-	res, err := v.Reqeust_api_get("photos.saveMessagesPhoto?", u)
+	res, err := v.Reqeust_api_post("photos.saveMessagesPhoto?", u, data)
 
 	if err != nil {
-		return SaveMessagesPhoto{}, err
+		return SaveMessagesPhotoResponse{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
-		return SaveMessagesPhoto{}, errors.New(check)
+		return SaveMessagesPhotoResponse{}, errors.New(check)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return SaveMessagesPhoto{}, err
+		return SaveMessagesPhotoResponse{}, err
 	}
 
-	var p SaveMessagesPhoto
+	var r SaveMessagesPhotoResponse
 
-	err = json.Unmarshal(data, &p)
+	err = json.Unmarshal(body, &r)
 
 	if err != nil {
-		return SaveMessagesPhoto{}, err
+		return SaveMessagesPhotoResponse{}, err
 	}
 
-	return p, nil
+	return r, nil
 }
 
 func MediaToAttachment(typ string, OwnerID, MediaID int, access_key string) string {
@@ -943,50 +1340,65 @@ type GetVideoResponse struct {
 	} `json:"response"`
 }
 
+//https://dev.vk.com/method/video.get
 func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
+	data := url.Values{}
+
+	if p.AlbumID != 0 {
+		data.Set("album_id", fmt.Sprint(p.AlbumID))
+	}
+
+	if p.Count != 0 {
+		data.Set("count", fmt.Sprint(p.Count))
+	}
+
+	data.Set("extended", fmt.Sprint(p.Extended))
+
+	if p.Fields != "" {
+		data.Set("fields", p.Fields)
+	}
+
+	if p.Offset != 0 {
+		data.Set("offset", fmt.Sprint(p.Offset))
+	}
+
+	if p.OwnerID != 0 {
+		data.Set("owner_id", fmt.Sprint(p.OwnerID))
+	}
+
+	if p.Videos != "" {
+		data.Set("videos", p.Videos)
+	}
+
 	var u string = ""
-
-	/* if p. != "" {
-		u += "hash=" + Hash
-	} */
-
-	/* 	if Photo != "" {
-	   		u += "&photo=" + Photo
-	   	}
-
-	   	if Server != 0 {
-	   		u += "&server=" + strconv.Itoa(Server)
-	   	} */
-
-	u += "owner_id=" + strconv.Itoa(p.OwnerID) + "&videos=" + p.Videos
 
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.UserToken
+	} else {
+		return GetVideoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("video.get?", u)
+	res, err := v.Reqeust_api_post("video.get?", u, data)
 
 	if err != nil {
 		return GetVideoResponse{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return GetVideoResponse{}, errors.New(check)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
 		return GetVideoResponse{}, err
 	}
 
-	//log.Println(string(data))
-
 	var r GetVideoResponse
 
-	err = json.Unmarshal(data, &r)
+	err = json.Unmarshal(body, &r)
 
 	if err != nil {
 		return GetVideoResponse{}, err

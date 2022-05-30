@@ -1,4 +1,4 @@
-package apiErrors
+package ApiErrors
 
 import (
 	"bytes"

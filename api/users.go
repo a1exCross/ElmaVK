@@ -3,10 +3,10 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
-	"strconv"
 
-	"github.com/a1exCross/ElmaVK/apiErrors"
+	"github.com/a1exCross/ElmaVK/ApiErrors"
 )
 
 type UserParams struct {
@@ -174,34 +174,47 @@ type UserGetParams struct {
 	NameCase UserNameCases
 }
 
-func (v VK) GetUserByID(u UserGetParams) (User, error) {
-	url := "access_token=" + v.Token + "&v=" + v.Version
+//https://dev.vk.com/method/users.get
+func (v VK) GetUserByID(p UserGetParams) (User, error) {
+	var u string = ""
 
-	url += "&user_ids="
-	for i, user := range u.UserIDs {
-		if i > 0 {
-			url += ","
+	if p.UserIDs != nil {
+		u += "&user_ids="
+		for i, user := range p.UserIDs {
+			if i > 0 {
+				u += ","
+			}
+			u += fmt.Sprint(user)
 		}
-		url += strconv.Itoa(user)
 	}
 
-	url += "&fields="
-	for i, f := range u.Fields {
-		if i > 0 {
-			url += ","
+	if p.Fields != nil {
+		u += "&fields="
+		for i, f := range p.Fields {
+			if i > 0 {
+				u += ","
+			}
+			u += string(f)
 		}
-		url += string(f)
 	}
 
-	url += "&name_case=" + string(u.NameCase)
+	if p.NameCase != "" {
+		u += "&name_case=" + string(p.NameCase)
+	}
 
-	res, err := v.Reqeust_api_get("users.get?", url)
+	if v.Token != "" {
+		u += "access_token=" + v.Token + "&v=" + v.Version
+	} else {
+		return User{}, errors.New("Auth token is empty")
+	}
+
+	res, err := v.Reqeust_api_get("users.get?", u)
 
 	if err != nil {
 		return User{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return User{}, errors.New(check)

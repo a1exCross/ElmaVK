@@ -46,7 +46,7 @@ func main() {
 
 	clbck := callbackApi.New()
 
-	vk.UserToken = "3a9d86957773b960b7b2c34998124103c9ddfaaf8654ad6841c76ccf5e4671e9b06cac198b75dfbe5e7ec"
+	vk.UserToken = "e96350e10f9dbf5f81aff0919bf69c879769a716c3e0d4cdce190cf5d10b3907c1f69132092786250e5d1"
 
 	clbck.Vk = vk
 
@@ -108,23 +108,64 @@ func main() {
 		Action: api.KeyboardActionTypeCallback{
 			Type:    api.ActionCallback,
 			Payload: api.ToPayload("btn1"),
-			Label:   "ДАроу",
+			Label:   "Привет",
 		},
 		Color: api.Primary,
 	})
 
 	log.Println(k.Buttons[0][0])
 
-	_, err := vk.SendMessage(api.SendMessage{
+	at, err := vk.GetAttachments(api.GetAttachmentsParams{
+		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
+		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Король и Шут - Дагон.mp3"},
+		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx", "C:/Users/a1exCross/Desktop/VKElmaLib/Ответы Караваева.docx"},
+		FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Ви део.mp4"},
+		//FilePaths:     []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx"},
+		PeerID: 106988557,
+		//OriginalPhoto: true,
+		//OriginalVideo: true,
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	id, err := vk.MessagesSend(api.MessagesSendParams{
 		PeerIDs:  []int{106988557},
 		Message:  "message",
 		RandomID: 0,
 		//Keyboard: k,
 	})
 
+	gr, _ := vk.GetCurrentGroup()
+
+	res_edit, err := vk.MessagesEdit(api.MessagesEditParams{
+		PeerID:                id.Response[0].PeerID,
+		ConversationMessageID: id.Response[0].ConversationMessageID,
+		Message:               "message111",
+		Attachment:            at,
+		GroupID:               gr.Response[0].ID,
+	})
+
+	log.Println(res_edit)
+
 	if err != nil {
 		log.Println(err)
 	}
+
+	/* res_del, err := vk.MessagesDelete(api.MessagesDeleteParams{
+		//MessageIDs: []int{id.Response[0].ConversationMessageID},
+		//GroupID:      gr.Response[0].ID,
+		DeleteForAll: false,
+		PeerID:       id.Response[0].PeerID,
+		//Cmids: ,
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(res_del) */
 
 	/* url, err := oauth.ImplictFlow(oauth.AuthParams{
 		Client_ID: 8117272,
@@ -132,28 +173,33 @@ func main() {
 		Scope:     []oauth.Scope{oauth.Video},
 	})
 
-	fmt.Println(url) */
-
-	/* at, err := vk.GetAttachments(api.GetAttachmentsParams{
-		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
-		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Король и Шут - Дагон.mp3"},
-		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx", "C:/Users/a1exCross/Desktop/VKElmaLib/Ответы Караваева.docx"},
-		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Видео.mp4"},
-		FilePaths:     []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx"},
-		PeerID:        106988557,
-		OriginalPhoto: true,
-	})
-
 	if err != nil {
 		log.Println(err)
-	} else {
-		vk.SendMessage(api.SendMessage{
-			PeerIDs:    []int{106988557},
-			Message:    "message",
-			RandomID:   0,
-			Attachment: at,
-		})
-	} */
+	}
+
+	fmt.Println(url) */
+
+	/* 	at, err := vk.GetAttachments(api.GetAttachmentsParams{
+	   		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
+	   		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Король и Шут - Дагон.mp3"},
+	   		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx", "C:/Users/a1exCross/Desktop/VKElmaLib/Ответы Караваева.docx"},
+	   		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Видео.mp4"},
+	   		//FilePaths:     []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx"},
+	   		PeerID:        106988557,
+	   		OriginalPhoto: true,
+	   		OriginalVideo: true,
+	   	})
+
+	   	if err != nil {
+	   		log.Println(err)
+	   	} else {
+	   		vk.SendMessage(api.SendMessage{
+	   			PeerIDs:    []int{106988557},
+	   			Message:    "message",
+	   			RandomID:   0,
+	   			Attachment: at,
+	   		})
+	   	} */
 
 	http.HandleFunc("/callback", clbck.HandleFunc)
 	http.ListenAndServe(":80", nil)
@@ -210,6 +256,17 @@ func MessageFromUser(e callbackApi.Events, obj callbackApi.MessageObject) { //ca
 
 func MessageFromGroup(e callbackApi.Events, obj callbackApi.MessageObjectMessage) {
 	log.Println("Пользователь с идентификатором", e.GroupID, "отправил сообщение", obj.Text)
+
+	_, err := vk.MessagesGetByConversationMessageID(api.MessagesGetByConversationMessageIDParams{
+		PeerID:                 obj.PeerID,
+		ConversationMessageIDs: []int{obj.ConversationMessageID},
+		Extended:               false,
+		GroupID:                e.GroupID,
+	})
+
+	if err != nil {
+		log.Println("conv:", err)
+	}
 }
 
 func MessageEditt(e callbackApi.Events, obj callbackApi.MessageObjectMessage) {
@@ -240,7 +297,7 @@ func MessageEventt(e callbackApi.Events, obj callbackApi.MessageEventObject) {
 				Text: "Hello!!",
 			},
 		},
-		/* EventData: api.EventAnswerType{
+		/* 	EventData: api.EventAnswerType{
 			OpenLink: &api.OpenLinkAnswerType{
 				Link: "https://www.google.com",
 			},

@@ -19,15 +19,11 @@ func (v VK) Reqeust_api_get(method, param string) (*http.Response, error) {
 }
 
 func (v VK) Reqeust_api_post(method, param string, data url.Values) (*http.Response, error) {
-
 	req, err := http.NewRequest(http.MethodPost, api_host+method+param, strings.NewReader(data.Encode()))
 
 	if err != nil {
 		return nil, err
 	}
-
-	/* 	d, _ := ioutil.ReadAll(req.Body)
-	   	log.Println(string(d)) */
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 

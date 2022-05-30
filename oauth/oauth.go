@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/a1exCross/ElmaVK/apiErrors"
+	"github.com/a1exCross/ElmaVK/ApiErrors"
 )
 
 const auth_url = "https://oauth.vk.com/authorize?"
@@ -38,11 +38,12 @@ type AuthParams struct {
 	Client_ID    int
 	CleintSecret string
 	Redirect_URI string
-	Group_IDs    []int
-	Display      Display
-	Scope        []Scope
-	State        string
-	Revoke       bool
+	//Group_IDs    []int
+	GroupID int
+	Display Display
+	Scope   []Scope
+	State   string
+	Revoke  bool
 }
 
 func GetGroupParams() AuthParams {
@@ -107,16 +108,20 @@ func AuthCodeFlow(g AuthParams) (Auth, string) {
 		u += "client_id=" + strconv.Itoa(g.Client_ID)
 	}
 
-	if g.Group_IDs != nil {
+	if g.GroupID != 0 {
 		u += "&group_ids="
 	}
 
-	for i, v := range g.Group_IDs {
-		if i > 0 {
-			u += ","
-		}
-		u += strconv.Itoa(v)
-	}
+	/* 	if g.Group_IDs != nil {
+	   		u += "&group_ids="
+	   	}
+
+	   	for i, v := range g.Group_IDs {
+	   		if i > 0 {
+	   			u += ","
+	   		}
+	   		u += strconv.Itoa(v)
+	   	} */
 
 	if g.Display != "" {
 		u += "&display=" + string(g.Display)
@@ -173,7 +178,7 @@ func (a *Auth) req_token(code string) (GroupTokens, error) {
 		return GroupTokens{}, err
 	}
 
-	check := apiErrors.GetError(res)
+	check := ApiErrors.GetError(res)
 
 	if check != "ok" {
 		return GroupTokens{}, errors.New(check)
