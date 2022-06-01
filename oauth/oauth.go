@@ -1,3 +1,4 @@
+//Пакет для осуществления авторизации
 package oauth
 
 import (
@@ -7,9 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
 
-	"github.com/a1exCross/ElmaVK/ApiErrors"
+	"github.com/a1exCross/ElmaVK/vkerrors"
 )
 
 const auth_url = "https://oauth.vk.com/authorize?"
@@ -36,62 +36,56 @@ const (
 
 type AuthParams struct {
 	Client_ID    int
-	CleintSecret string
+	ClientSecret string
 	Redirect_URI string
-	//Group_IDs    []int
-	GroupID int
-	Display Display
-	Scope   []Scope
-	State   string
-	Revoke  bool
+	Group_IDs    []int
+	GroupID      int
+	Display      Display
+	Scope        []Scope
+	State        string
 }
 
-func GetGroupParams() AuthParams {
+/* func GetGroupParams() AuthParams {
 	return AuthParams{}
-}
-
-type Auth struct {
-	AuthParams
-	client_secret string
-	Client        *http.Client
-}
+} */
 
 //Генерация ссылки для получения токена пользователя
 func ImplictFlow(p AuthParams) (*url.URL, error) {
 	var u string
 
 	if p.Client_ID != 0 {
-		u += fmt.Sprintf("client_id=%d", p.Client_ID)
+		u += "client_id=" + fmt.Sprint(p.Client_ID)
 	} else {
-		return &url.URL{}, errors.New("ClientID не указан")
+		return &url.URL{}, errors.New("Required field 'ClientID' is empty, MethodName - ImplictFlow()")
 	}
 
 	if p.Display != "" {
-		u += fmt.Sprintf("display=%s", p.Display)
+		u += fmt.Sprint("&display=") + string(p.Display)
 	} else {
-		u += "display=page"
+		u += "&display=page"
 	}
 
 	if p.Redirect_URI != "" {
-		u += fmt.Sprintf("redirect_uri=%s", p.Redirect_URI)
+		u += "&redirect_uri" + p.Redirect_URI
 	}
 
 	if p.Scope != nil {
 		u += "&scope="
+		for i, v := range p.Scope {
+			if i > 0 {
+				u += ","
+			}
+			u += string(v)
+		}
 	}
 
-	for i, v := range p.Scope {
-		if i > 0 {
-			u += ","
-		}
-		u += string(v)
+	if p.State != "" {
+		u += "&state=" + p.State
 	}
 
 	u += "&response_type=token&v=" + version
 
-	u = auth_url + u
-
-	ur, err := url.Parse(u)
+	ur, err := url.Parse(auth_url + u)
 
 	if err != nil {
 		return &url.URL{}, err
@@ -100,54 +94,70 @@ func ImplictFlow(p AuthParams) (*url.URL, error) {
 	return ur, nil
 }
 
+type Auth struct {
+	AuthParams
+	Client *http.Client
+	URL    *url.URL
+}
+
 //Получение токена сообщества
-func AuthCodeFlow(g AuthParams) (Auth, string) {
+func AuthCodeFlow(p AuthParams) Auth {
 	var u string
 
-	if g.Client_ID != 0 {
-		u += "client_id=" + strconv.Itoa(g.Client_ID)
+	if p.Client_ID != 0 {
+		u += "client_id=" + fmt.Sprint(p.Client_ID)
 	}
 
-	if g.GroupID != 0 {
-		u += "&group_ids="
+	if p.GroupID != 0 {
+		u += "&group_ids=" + fmt.Sprint(p.GroupID)
 	}
 
-	/* 	if g.Group_IDs != nil {
-	   		u += "&group_ids="
-	   	}
-
-	   	for i, v := range g.Group_IDs {
-	   		if i > 0 {
-	   			u += ","
-	   		}
-	   		u += strconv.Itoa(v)
-	   	} */
-
-	if g.Display != "" {
-		u += "&display=" + string(g.Display)
-	}
-
-	if g.Redirect_URI != "" {
-		u += "&redirect_uri=" + g.Redirect_URI
-	}
-
-	if g.Scope != nil {
-		u += "&scope="
-	}
-
-	for i, v := range g.Scope {
-		if i > 0 {
+	if p.Group_IDs != nil {
+		if p.GroupID == 0 {
+			u += "&group_ids="
+		} else {
 			u += ","
 		}
-		u += string(v)
+		for i, v := range p.Group_IDs {
+			if i > 0 {
+				u += ","
+			}
+			u += fmt.Sprint(v)
+		}
+	}
+
+	if p.Display != "" {
+		u += "&display=" + string(p.Display)
+	}
+
+	if p.Redirect_URI != "" {
+		u += "&redirect_uri=" + p.Redirect_URI
+	}
+
+	if p.Scope != nil {
+		u += "&scope="
+
+		for i, v := range p.Scope {
+			if i > 0 {
+				u += ","
+			}
+			u += string(v)
+		}
+	}
+
+	if p.State != "" {
+		u += "&state=" + p.State
 	}
 
 	u += "&response_type=code&v=" + version
 
+	ur, _ := url.Parse(auth_url + u)
+
 	return Auth{
-		AuthParams: g,
+		AuthParams: p,
 		Client:     http.DefaultClient,
-	}, auth_url + u
+		URL:        ur,
+	}
 }
 
 type GroupToken struct {
@@ -160,11 +170,28 @@ type GroupTokens struct {
 	ExpiresIn int          `json:"expires_in"`
 }
 
-func (a *Auth) req_token(code string) (GroupTokens, error) {
-	u := "client_id=" + strconv.Itoa(a.Client_ID) +
-		"&client_secret=" + a.client_secret +
-		"&redirect_uri=" + a.Redirect_URI +
-		"&code=" + code
+func (a *Auth) get_token_request(code string) (GroupTokens, error) {
+	var u string = ""
+
+	if a.Client_ID != 0 {
+		u += "client_id=" + fmt.Sprint(a.Client_ID)
+	} else {
+		return GroupTokens{}, errors.New("Required field 'ClientID' is empty, MethodName - get_token_request()")
+	}
+
+	if a.ClientSecret != "" {
+		u += "&client_secret=" + a.ClientSecret
+	} else {
+		return GroupTokens{}, errors.New("Required field 'ClientSecret' is empty, MethodName - get_token_request()")
+	}
+
+	if code != "" {
+		u += "&code=" + code
+	} else {
+		return GroupTokens{}, errors.New("Required field 'code' is empty, MethodName - get_token_request()")
+	}
+
+	u += "&redirect_uri=" + a.Redirect_URI
 
 	req, err := http.NewRequest("GET", get_token_url+u, nil)
 
@@ -178,7 +205,7 @@ func (a *Auth) req_token(code string) (GroupTokens, error) {
 		return GroupTokens{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return GroupTokens{}, errors.New(check)
@@ -191,7 +218,12 @@ func (a *Auth) req_token(code string) (GroupTokens, error) {
 	}
 
 	var t GroupTokens
+
 	err = json.Unmarshal(data, &t)
+
+	if err != nil {
+		return GroupTokens{}, err
+	}
 
 	return t, nil
 }
@@ -199,7 +231,7 @@ func (a *Auth) req_token(code string) (GroupTokens, error) {
 func (a Auth) GetToken(u *url.URL) (GroupTokens, error) {
 	code := u.Query().Get("code")
 
-	tokens, err := a.req_token(code)
+	tokens, err := a.get_token_request(code)
 
 	if err != nil {
 		return GroupTokens{}, err

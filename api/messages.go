@@ -15,17 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/a1exCross/ElmaVK/ApiErrors"
+	"github.com/a1exCross/ElmaVK/vkerrors"
 )
-
-type MessagesSendResponse struct {
-	//Response int `json:"response"`
-	Response []struct {
-		PeerID                int `json:"peer_id"`
-		MessageID             int `json:"message_id"`
-		ConversationMessageID int `json:"conversation_message_id"`
-	} `json:"response"`
-}
 
 type ShowSnackbarAnswerType struct {
 	Text string
@@ -57,10 +48,6 @@ type SendMessageEventAnswerParams struct {
 
 func toJsonParam(p1, p2 string) string {
 	return fmt.Sprintf("\"%s\":\"%s\"", p1, p2)
-}
-
-type SendMessageEventAnswerResponse struct {
-	Response int `json:"response"`
 }
 
 //https://dev.vk.com/method/messages.sendMessageEventAnswer
@@ -124,7 +111,7 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 		return SendMessageEventAnswerResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return SendMessageEventAnswerResponse{}, errors.New(check)
@@ -147,11 +134,8 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 	return t, nil
 }
 
-type GetAttachmentsParams struct {
-	FilePaths     []string
-	PeerID        int
-	OriginalPhoto bool
-	OriginalVideo bool
+type SendMessageEventAnswerResponse struct {
+	Response int `json:"response"`
 }
 
 type MessagesGetByConversationMessageIDParams struct {
@@ -160,57 +144,6 @@ type MessagesGetByConversationMessageIDParams struct {
 	Extended               bool     `json:"extended"`
 	Feilds                 []string `json:"fields,omitempty"`
 	GroupID                int      `json:"group_id"`
-}
-
-type MessagesGetByConversationMessageIDResponse struct {
-	Response struct {
-		Count int `json:"count"`
-		Items []struct {
-			Date                  int           `json:"date"`
-			FromID                int           `json:"from_id"`
-			ID                    int           `json:"id"`
-			Out                   int           `json:"out"`
-			Attachments           []interface{} `json:"attachments"`
-			ConversationMessageID int           `json:"conversation_message_id"`
-			FwdMessages           []interface{} `json:"fwd_messages"`
-			Important             bool          `json:"important"`
-			IsHidden              bool          `json:"is_hidden"`
-			PeerID                int           `json:"peer_id"`
-			RandomID              int           `json:"random_id"`
-			Text                  string        `json:"text"`
-		} `json:"items"`
-		Profiles []struct {
-			ID         int    `json:"id"`
-			Sex        int    `json:"sex"`
-			ScreenName string `json:"screen_name"`
-			Photo50    string `json:"photo_50"`
-			Photo100   string `json:"photo_100"`
-			OnlineInfo struct {
-				Visible  bool `json:"visible"`
-				LastSeen int  `json:"last_seen"`
-				IsOnline bool `json:"is_online"`
-				AppID    int  `json:"app_id"`
-				IsMobile bool `json:"is_mobile"`
-			} `json:"online_info"`
-			Online          int    `json:"online"`
-			OnlineMobile    int    `json:"online_mobile"`
-			OnlineApp       int    `json:"online_app"`
-			FirstName       string `json:"first_name"`
-			LastName        string `json:"last_name"`
-			CanAccessClosed bool   `json:"can_access_closed"`
-			IsClosed        bool   `json:"is_closed"`
-		} `json:"profiles"`
-		Groups []struct {
-			ID         int    `json:"id"`
-			Name       string `json:"name"`
-			ScreenName string `json:"screen_name"`
-			IsClosed   int    `json:"is_closed"`
-			Type       string `json:"type"`
-			Photo50    string `json:"photo_50"`
-			Photo100   string `json:"photo_100"`
-			Photo200   string `json:"photo_200"`
-		} `json:"groups"`
-	} `json:"response"`
 }
 
 //https://dev.vk.com/method/messages.getByConversationMessageId
@@ -267,7 +200,7 @@ func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessag
 		return MessagesGetByConversationMessageIDResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return MessagesGetByConversationMessageIDResponse{}, errors.New(check)
@@ -290,6 +223,57 @@ func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessag
 	return t, nil
 }
 
+type MessagesGetByConversationMessageIDResponse struct {
+	Response struct {
+		Count int `json:"count"`
+		Items []struct {
+			Date                  int           `json:"date"`
+			FromID                int           `json:"from_id"`
+			ID                    int           `json:"id"`
+			Out                   int           `json:"out"`
+			Attachments           []interface{} `json:"attachments"`
+			ConversationMessageID int           `json:"conversation_message_id"`
+			FwdMessages           []interface{} `json:"fwd_messages"`
+			Important             bool          `json:"important"`
+			IsHidden              bool          `json:"is_hidden"`
+			PeerID                int           `json:"peer_id"`
+			RandomID              int           `json:"random_id"`
+			Text                  string        `json:"text"`
+		} `json:"items"`
+		Profiles []struct {
+			ID         int    `json:"id"`
+			Sex        int    `json:"sex"`
+			ScreenName string `json:"screen_name"`
+			Photo50    string `json:"photo_50"`
+			Photo100   string `json:"photo_100"`
+			OnlineInfo struct {
+				Visible  bool `json:"visible"`
+				LastSeen int  `json:"last_seen"`
+				IsOnline bool `json:"is_online"`
+				AppID    int  `json:"app_id"`
+				IsMobile bool `json:"is_mobile"`
+			} `json:"online_info"`
+			Online          int    `json:"online"`
+			OnlineMobile    int    `json:"online_mobile"`
+			OnlineApp       int    `json:"online_app"`
+			FirstName       string `json:"first_name"`
+			LastName        string `json:"last_name"`
+			CanAccessClosed bool   `json:"can_access_closed"`
+			IsClosed        bool   `json:"is_closed"`
+		} `json:"profiles"`
+		Groups []struct {
+			ID         int    `json:"id"`
+			Name       string `json:"name"`
+			ScreenName string `json:"screen_name"`
+			IsClosed   int    `json:"is_closed"`
+			Type       string `json:"type"`
+			Photo50    string `json:"photo_50"`
+			Photo100   string `json:"photo_100"`
+			Photo200   string `json:"photo_200"`
+		} `json:"groups"`
+	} `json:"response"`
+}
+
 type MessagesEditParams struct {
 	PeerID                int
 	ConversationMessageID int
@@ -305,10 +289,6 @@ type MessagesEditParams struct {
 	Long                  string
 	KeepForwardMessages   bool
 	KeepSnipets           bool
-}
-
-type MessagesEditResponse struct {
-	Response int `json:"response"`
 }
 
 //https://dev.vk.com/method/messages.edit
@@ -396,7 +376,7 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 		return 0, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -419,16 +399,15 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 	return t.Response, nil
 }
 
+type MessagesEditResponse struct {
+	Response int `json:"response"`
+}
 type MessagesDeleteParams struct {
 	MessageIDs   []int
 	GroupID      int
 	DeleteForAll bool
 	PeerID       int
 	//Cmids        []int
-}
-
-type MessagesDeleteResponse struct {
-	Response json.RawMessage `json:"response"`
 }
 
 //https://dev.vk.com/method/messages.delete
@@ -476,7 +455,7 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 		return nil, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -505,6 +484,17 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 	}
 
 	return arr, nil
+}
+
+type MessagesDeleteResponse struct {
+	Response json.RawMessage `json:"response"`
+}
+
+type GetAttachmentsParams struct {
+	FilePaths     []string
+	PeerID        int
+	OriginalPhoto bool
+	OriginalVideo bool
 }
 
 //https://dev.vk.com/reference/objects/attachments-message
@@ -606,7 +596,7 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			return nil, err
 		}
 
-		check := ApiErrors.GetError(res)
+		check := vkerrors.GetError(res)
 
 		if check != "ok" {
 			return nil, errors.New(check)
@@ -620,7 +610,7 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 
 		if attachment_type == "photo" {
 
-			var r ResponseAfterUploadPhoto
+			var r AfterUploadPhotoResponse
 
 			err = json.Unmarshal(data, &r)
 
@@ -638,7 +628,7 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 		}
 
 		if attachment_type == "doc" {
-			var r ResponseAfterUploadDoc
+			var r AfterUploadDocResponse
 
 			err = json.Unmarshal(data, &r)
 
@@ -663,6 +653,16 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 	}
 
 	return at, nil
+}
+
+type AfterUploadPhotoResponse struct {
+	Server int    `json:"server"`
+	Photo  string `json:"photo"`
+	Hash   string `json:"hash"`
+}
+
+type AfterUploadDocResponse struct {
+	File string `json:"file"`
 }
 
 type MessagesSendParams struct {
@@ -694,7 +694,9 @@ type MessagesSendParams struct {
 }
 
 //https://dev.vk.com/method/messages.send
-func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponse, error) { //подумать над возвраащемым значением
+func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, MessagesSendResponseID, error) {
+	// первый возвращаемый параметр функции возвращает структуру, если были переданы UserIDs или PeerIDs
+	// второй возвращаемый параметр функции возвращает структуру, если были переданы UserID или PeerID
 	data := url.Values{}
 
 	if p.UserID != 0 {
@@ -738,7 +740,7 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponse, error) { /
 	if p.Message != "" {
 		data.Set("message", url.QueryEscape(p.Message))
 	} else if p.Attachment == nil {
-		return MessagesSendResponse{}, errors.New("Required field 'Message' is empty, MethodName - MessagesSend()")
+		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New("Required field 'Message' is empty, MethodName - MessagesSend()")
 	}
 
 	if p.ForwardMessages != nil {
@@ -774,7 +776,7 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponse, error) { /
 	ps, err := json.Marshal(p.Keyboard)
 
 	if err != nil {
-		return MessagesSendResponse{}, err
+		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
 
 	data.Set("keyboard", string(ps))
@@ -810,36 +812,46 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponse, error) { /
 	if v.Token != "" {
 		u += "&v=" + v.Version + "&access_token=" + v.Token
 	} else {
-		return MessagesSendResponse{}, errors.New("Auth token is empty")
+		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New("Auth token is empty")
 	}
 
 	res, err := v.Reqeust_api_post("messages.send?", u, data)
 
 	if err != nil {
-		return MessagesSendResponse{}, err
+		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
-		return MessagesSendResponse{}, errors.New(check)
+		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return MessagesSendResponse{}, err
+		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
 
-	var t MessagesSendResponse
+	var id MessagesSendResponseID
+	var ids MessagesSendResponseIDs
 
-	err = json.Unmarshal(body, &t)
+	_ = json.Unmarshal(body, &id)
+	_ = json.Unmarshal(body, &ids)
 
-	if err != nil {
-		return MessagesSendResponse{}, err
-	}
+	return ids, id, nil
+}
 
-	return t, nil
+type MessagesSendResponseIDs struct {
+	Response []struct {
+		PeerID                int `json:"peer_id"`
+		MessageID             int `json:"message_id"`
+		ConversationMessageID int `json:"conversation_message_id"`
+	} `json:"response"`
+}
+
+type MessagesSendResponseID struct {
+	Response int `json:"response"`
 }
 
 type SaveVideoParams struct {
@@ -911,7 +923,7 @@ func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
 		return SaveVideoResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return SaveVideoResponse{}, errors.New(check)
@@ -969,7 +981,7 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -992,8 +1004,10 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 	return g.Response.UploadURL, nil
 }
 
-type ResponseAfterUploadDoc struct {
-	File string `json:"file"`
+type GetMessagesUploadServerDocResponse struct {
+	Response struct {
+		UploadURL string `json:"upload_url"`
+	} `json:"response"`
 }
 
 /* func (v VK) GetMessagesUploadServerAudio() (string, error) {
@@ -1011,7 +1025,7 @@ type ResponseAfterUploadDoc struct {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -1035,26 +1049,9 @@ type ResponseAfterUploadDoc struct {
 }
 */
 
-type GetMessagesUploadServerAudioResponse struct {
+/* type GetMessagesUploadServerAudioResponse struct {
 	UploadURL string `json:"upload_url"`
-}
-
-type GetMessagesUploadServerDocResponse struct {
-	Response struct {
-		UploadURL string `json:"upload_url"`
-	} `json:"response"`
-}
-
-type GetMessagesUploadServerPhotoResponse struct {
-	AlbumID   int    `json:"album_id"`
-	UploadURL string `json:"upload_url"`
-	UserID    int    `json:"user_id"`
-	GroupID   int    `json:"group_id"`
-}
-
-type GetMessagesUploadServerPhoto struct {
-	GetMessagesUploadServerPhotoResponse `json:"response"`
-}
+} */
 
 //https://dev.vk.com/method/photos.getMessagesUploadServer
 func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
@@ -1076,7 +1073,7 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -1088,7 +1085,7 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", err
 	}
 
-	var g GetMessagesUploadServerPhoto
+	var g GetMessagesUploadServerPhotoResponse
 
 	err = json.Unmarshal(data, &g)
 
@@ -1096,31 +1093,16 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", err
 	}
 
-	return g.UploadURL, nil
+	return g.Response.UploadURL, nil
 }
 
-type ResponseAfterUploadPhoto struct {
-	Server int    `json:"server"`
-	Photo  string `json:"photo"`
-	Hash   string `json:"hash"`
-}
-
-type SizesPhoto struct {
-	Height int    `json:"height"`
-	URL    string `json:"url"`
-	Type   string `json:"type"`
-	Width  int    `json:"width"`
-}
-
-type ResponseSaveMessagesPhoto struct {
-	AlbumID   int          `json:"album_id"`
-	Date      int          `json:"date"`
-	ID        int          `json:"id"`
-	OwnerID   int          `json:"owner_id"`
-	AccessKey string       `json:"access_key"`
-	Sizes     []SizesPhoto `json:"sizes"`
-	Text      string       `json:"text"`
-	HasTags   bool         `json:"has_tags"`
+type GetMessagesUploadServerPhotoResponse struct {
+	Response struct {
+		AlbumID   int    `json:"album_id"`
+		UploadURL string `json:"upload_url"`
+		UserID    int    `json:"user_id"`
+		GroupID   int    `json:"group_id"`
+	} `json:"response"`
 }
 
 type SaveDocParams struct {
@@ -1164,7 +1146,7 @@ func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
 		return SaveDocResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return SaveDocResponse{}, errors.New(check)
@@ -1203,10 +1185,6 @@ type SaveDocResponse struct {
 	} `json:"response"`
 }
 
-type SaveMessagesPhotoResponse struct {
-	Response []ResponseSaveMessagesPhoto `json:"response"`
-}
-
 //https://dev.vk.com/method/photos.saveMessagesPhoto
 func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhotoResponse, error) {
 	data := url.Values{}
@@ -1236,7 +1214,7 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 		return SaveMessagesPhotoResponse{}, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return SaveMessagesPhotoResponse{}, errors.New(check)
@@ -1259,6 +1237,28 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 	return r, nil
 }
 
+type SaveMessagesPhotoResponse struct {
+	Response []SaveMessagesPhoto `json:"response"`
+}
+
+type SizesPhoto struct {
+	Height int    `json:"height"`
+	URL    string `json:"url"`
+	Type   string `json:"type"`
+	Width  int    `json:"width"`
+}
+
+type SaveMessagesPhoto struct {
+	AlbumID   int          `json:"album_id"`
+	Date      int          `json:"date"`
+	ID        int          `json:"id"`
+	OwnerID   int          `json:"owner_id"`
+	AccessKey string       `json:"access_key"`
+	Sizes     []SizesPhoto `json:"sizes"`
+	Text      string       `json:"text"`
+	HasTags   bool         `json:"has_tags"`
+}
+
 func MediaToAttachment(typ string, OwnerID, MediaID int, access_key string) string {
 	if typ != "video" {
 		return fmt.Sprintf("%s%d_%d", typ, OwnerID, MediaID)
@@ -1267,7 +1267,7 @@ func MediaToAttachment(typ string, OwnerID, MediaID int, access_key string) stri
 	}
 }
 
-func (r ResponseSaveMessagesPhoto) GetMaxSizePhotoUrl() SizesPhoto {
+func (r SaveMessagesPhoto) GetMaxSizePhotoUrl() SizesPhoto {
 	var max = r.Sizes[0]
 	for _, v := range r.Sizes {
 		if v.Height > max.Height && v.Width > max.Width {
@@ -1285,6 +1285,73 @@ type GetVideoParams struct {
 	Offset   int
 	Extended bool
 	Fields   string
+}
+
+//https://dev.vk.com/method/video.get
+func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
+	data := url.Values{}
+
+	if p.AlbumID != 0 {
+		data.Set("album_id", fmt.Sprint(p.AlbumID))
+	}
+
+	if p.Count != 0 {
+		data.Set("count", fmt.Sprint(p.Count))
+	}
+
+	data.Set("extended", fmt.Sprint(p.Extended))
+
+	if p.Fields != "" {
+		data.Set("fields", p.Fields)
+	}
+
+	if p.Offset != 0 {
+		data.Set("offset", fmt.Sprint(p.Offset))
+	}
+
+	if p.OwnerID != 0 {
+		data.Set("owner_id", fmt.Sprint(p.OwnerID))
+	}
+
+	if p.Videos != "" {
+		data.Set("videos", p.Videos)
+	}
+
+	var u string = ""
+
+	if v.Token != "" {
+		u += "&v=" + v.Version + "&access_token=" + v.UserToken
+	} else {
+		return GetVideoResponse{}, errors.New("Auth token is empty")
+	}
+
+	res, err := v.Reqeust_api_post("video.get?", u, data)
+
+	if err != nil {
+		return GetVideoResponse{}, err
+	}
+
+	check := vkerrors.GetError(res)
+
+	if check != "ok" {
+		return GetVideoResponse{}, errors.New(check)
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return GetVideoResponse{}, err
+	}
+
+	var r GetVideoResponse
+
+	err = json.Unmarshal(body, &r)
+
+	if err != nil {
+		return GetVideoResponse{}, err
+	}
+
+	return r, nil
 }
 
 type GetVideoResponse struct {
@@ -1338,71 +1405,4 @@ type GetVideoResponse struct {
 			} `json:"reposts"`
 		} `json:"items"`
 	} `json:"response"`
-}
-
-//https://dev.vk.com/method/video.get
-func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
-	data := url.Values{}
-
-	if p.AlbumID != 0 {
-		data.Set("album_id", fmt.Sprint(p.AlbumID))
-	}
-
-	if p.Count != 0 {
-		data.Set("count", fmt.Sprint(p.Count))
-	}
-
-	data.Set("extended", fmt.Sprint(p.Extended))
-
-	if p.Fields != "" {
-		data.Set("fields", p.Fields)
-	}
-
-	if p.Offset != 0 {
-		data.Set("offset", fmt.Sprint(p.Offset))
-	}
-
-	if p.OwnerID != 0 {
-		data.Set("owner_id", fmt.Sprint(p.OwnerID))
-	}
-
-	if p.Videos != "" {
-		data.Set("videos", p.Videos)
-	}
-
-	var u string = ""
-
-	if v.Token != "" {
-		u += "&v=" + v.Version + "&access_token=" + v.UserToken
-	} else {
-		return GetVideoResponse{}, errors.New("Auth token is empty")
-	}
-
-	res, err := v.Reqeust_api_post("video.get?", u, data)
-
-	if err != nil {
-		return GetVideoResponse{}, err
-	}
-
-	check := ApiErrors.GetError(res)
-
-	if check != "ok" {
-		return GetVideoResponse{}, errors.New(check)
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		return GetVideoResponse{}, err
-	}
-
-	var r GetVideoResponse
-
-	err = json.Unmarshal(body, &r)
-
-	if err != nil {
-		return GetVideoResponse{}, err
-	}
-
-	return r, nil
 }

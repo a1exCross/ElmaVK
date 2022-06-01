@@ -7,26 +7,11 @@ import (
 	"io/ioutil"
 	"math"
 
-	"github.com/a1exCross/ElmaVK/ApiErrors"
+	"github.com/a1exCross/ElmaVK/vkerrors"
 )
 
-type group_info struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	ScreenName string `json:"screen_name"`
-	IsClosed   int    `json:"is_closed"`
-	Type       string `json:"type"`
-	Photo50    string `json:"photo_50"`
-	Photo100   string `json:"photo_100"`
-	Photo200   string `json:"photo_200"`
-}
-
-type GroupInfo struct {
-	Response []group_info `json:"response"`
-}
-
 //https://dev.vk.com/method/groups.get
-func (v VK) GetCurrentGroup() (*GroupInfo, error) {
+func (v VK) GetCurrentGroup() (*GetCurrentGroupResponse, error) {
 	var u string = ""
 
 	if v.Token != "" {
@@ -42,7 +27,7 @@ func (v VK) GetCurrentGroup() (*GroupInfo, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -54,7 +39,7 @@ func (v VK) GetCurrentGroup() (*GroupInfo, error) {
 		return nil, err
 	}
 
-	group := GroupInfo{}
+	group := GetCurrentGroupResponse{}
 
 	err = json.Unmarshal(data, &group)
 
@@ -65,9 +50,16 @@ func (v VK) GetCurrentGroup() (*GroupInfo, error) {
 	return &group, nil
 }
 
-type ConfirmationKey struct {
-	Response struct {
-		Code string `json:"code"`
+type GetCurrentGroupResponse struct {
+	Response []struct {
+		ID         int    `json:"id"`
+		Name       string `json:"name"`
+		ScreenName string `json:"screen_name"`
+		IsClosed   int    `json:"is_closed"`
+		Type       string `json:"type"`
+		Photo50    string `json:"photo_50"`
+		Photo100   string `json:"photo_100"`
+		Photo200   string `json:"photo_200"`
 	} `json:"response"`
 }
 
@@ -82,7 +74,7 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 	}
 
 	if v.Token != "" {
-		u = "&access_token=" + v.Token + "&v=" + v.Version
+		u += "&access_token=" + v.Token + "&v=" + v.Version
 	} else {
 		return "", errors.New("Auth token is empty")
 	}
@@ -93,7 +85,7 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return "", errors.New(check)
@@ -105,7 +97,7 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", err
 	}
 
-	key := ConfirmationKey{}
+	key := GetConfirmationKeyResponse{}
 
 	err = json.Unmarshal(data, &key)
 
@@ -116,19 +108,9 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 	return key.Response.Code, nil
 }
 
-type ServerItem struct {
-	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	CreatorID int    `json:"creator_id"`
-	URL       string `json:"url"`
-	SecretKey string `json:"secret_key"`
-	Status    string `json:"status"`
-}
-
-type CallbackServersResponse struct {
+type GetConfirmationKeyResponse struct {
 	Response struct {
-		Count int          `json:"count"`
-		Items []ServerItem `json:"items"`
+		Code string `json:"code"`
 	} `json:"response"`
 }
 
@@ -143,7 +125,7 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 	}
 
 	if v.Token != "" {
-		u = "&access_token=" + v.Token + "&v=" + v.Version
+		u += "&access_token=" + v.Token + "&v=" + v.Version
 	} else {
 		return nil, errors.New("Auth token is empty")
 	}
@@ -154,7 +136,7 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return nil, errors.New(check)
@@ -166,21 +148,31 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, err
 	}
 
-	resp := CallbackServersResponse{}
+	var r GetCallbackServersResponse
 
-	err = json.Unmarshal(data, &resp)
+	err = json.Unmarshal(data, &r)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.Response.Items, nil
+	return r.Response.Items, nil
 }
 
-type AddCallbackServerResponse struct {
+type GetCallbackServersResponse struct {
 	Response struct {
-		ServerID int `json:"server_id"`
+		Count int          `json:"count"`
+		Items []ServerItem `json:"items"`
 	} `json:"response"`
+}
+
+type ServerItem struct {
+	ID        int    `json:"id"`
+	Title     string `json:"title"`
+	CreatorID int    `json:"creator_id"`
+	URL       string `json:"url"`
+	SecretKey string `json:"secret_key"`
+	Status    string `json:"status"`
 }
 
 //https://dev.vk.com/method/groups.addCallbackServer
@@ -191,7 +183,7 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 		return 0, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -214,8 +206,10 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 	return resp.Response.ServerID, nil
 }
 
-type ResponseServerDeleteOrSet struct {
-	Response int `json:"response"`
+type AddCallbackServerResponse struct {
+	Response struct {
+		ServerID int `json:"server_id"`
+	} `json:"response"`
 }
 
 //https://dev.vk.com/method/groups.deleteCallbackServer
@@ -235,7 +229,7 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 	}
 
 	if v.Token != "" {
-		u = "&access_token=" + v.Token + "&v=" + v.Version
+		u += "&access_token=" + v.Token + "&v=" + v.Version
 	}
 
 	res, err := v.Reqeust_api_get("groups.deleteCallbackServer?", u)
@@ -244,7 +238,7 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 		return -1, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -256,7 +250,7 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 		return -1, err
 	}
 
-	resp := ResponseServerDeleteOrSet{}
+	resp := ServerDeleteOrSetResponse{}
 
 	err = json.Unmarshal(data, &resp)
 
@@ -265,26 +259,6 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 	}
 
 	return resp.Response, nil
-}
-
-type CallbackSettings struct {
-	GroupID  int `json:"group_id"`
-	ServerID int `json:"server_id"`
-	CallbackEventSettings
-}
-
-type CallbackEventSettings struct {
-	MessageNew         bool `json:"message_new"`
-	MessageReply       bool `json:"message_reply"`
-	MessageEdit        bool `json:"message_edit"`
-	MessageAllow       bool `json:"message_allow"`
-	MessageDeny        bool `json:"message_deny"`
-	MessageTypingState bool `json:"message_typing_state"`
-	MessageEvent       bool `json:"message_event"`
-}
-
-func (v VK) GetCallbackSettingsParams() CallbackSettings {
-	return CallbackSettings{}
 }
 
 //https://dev.vk.com/method/groups.setCallbackSettings
@@ -327,7 +301,7 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 		return -1, err
 	}
 
-	check := ApiErrors.GetError(res)
+	check := vkerrors.GetError(res)
 
 	if check != "ok" {
 		return 0, errors.New(check)
@@ -339,7 +313,7 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 		return -1, err
 	}
 
-	resp := ResponseServerDeleteOrSet{}
+	resp := ServerDeleteOrSetResponse{}
 
 	err = json.Unmarshal(data, &resp)
 
@@ -348,4 +322,28 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 	}
 
 	return resp.Response, nil
+}
+
+type ServerDeleteOrSetResponse struct {
+	Response int `json:"response"`
+}
+
+func (v VK) GetCallbackSettingsParams() CallbackSettings {
+	return CallbackSettings{}
+}
+
+type CallbackSettings struct {
+	GroupID  int `json:"group_id"`
+	ServerID int `json:"server_id"`
+	CallbackEventSettings
+}
+
+type CallbackEventSettings struct {
+	MessageNew         bool `json:"message_new"`
+	MessageReply       bool `json:"message_reply"`
+	MessageEdit        bool `json:"message_edit"`
+	MessageAllow       bool `json:"message_allow"`
+	MessageDeny        bool `json:"message_deny"`
+	MessageTypingState bool `json:"message_typing_state"`
+	MessageEvent       bool `json:"message_event"`
 }

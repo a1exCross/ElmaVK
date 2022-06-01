@@ -1,4 +1,4 @@
-package callbackApi
+package callback
 
 import (
 	"encoding/json"
@@ -36,8 +36,6 @@ type FuncList struct {
 }
 
 func (c Callback) CallFuncList(data []byte, e Events) {
-	//log.Println(string(e.Object))
-
 	switch e.Type {
 	case MessageNew:
 		{

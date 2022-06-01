@@ -1,4 +1,5 @@
-package callbackApi
+//Пакет для работы с Callback API
+package callback
 
 import (
 	"encoding/json"
@@ -7,7 +8,6 @@ import (
 	"log"
 	"net/http"
 
-	//events "vksdk/callbackApi/events"
 	vk "github.com/a1exCross/ElmaVK/api"
 )
 
@@ -21,12 +21,10 @@ type Callback struct {
 	Functions       FuncList
 }
 
-/* func GetCallbackParams() *callback{
-	return &callback{}
-} */
-
-func New() Callback {
-	return Callback{}
+func New(v vk.VK) Callback {
+	return Callback{
+		Vk: v,
+	}
 }
 
 func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -46,10 +44,6 @@ func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	log.Println(e.Type)
-
-	log.Println(string(data))
-
 	if e.Secret == c.Secret_key {
 
 		c.CallFuncList(data, e)
@@ -60,9 +54,9 @@ func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_, _ = w.Write([]byte("ok"))
-}
+	_, err = w.Write([]byte("ok"))
 
-/* type CallbackServersArray struct {
-	Items []vk.ServerItem
-} */
+	if err != nil {
+		log.Println(err)
+	}
+}

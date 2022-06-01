@@ -4,56 +4,53 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
-	"github.com/a1exCross/ElmaVK/callbackApi"
-
-	//longpool "github.com/a1exCross/VkElmaLib/longpool-user"
 	"github.com/a1exCross/ElmaVK/api"
+	"github.com/a1exCross/ElmaVK/callback"
+	"github.com/a1exCross/ElmaVK/oauth"
 )
 
 var vk = api.Session("9e63c5f226af4bb3bec5ce0d83e5a093e6ae2d5b034be0d67b6c0f87a46f0b7fcad7d8c7a2c76a283d787")
+var auth = oauth.Auth{}
 
-func main() {
-	/* lp, err := longpool.New(vk, longpool.GetLongPoolServerParams{
-		NeedPTS:   true,
-		LpVersion: 3,
-		Mode:      2,
-	})
+func token(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL)
+	group_tokens, err := auth.GetToken(r.URL)
 
 	if err != nil {
 		log.Println(err)
 	}
 
-	lp.Run() */
+	log.Println(group_tokens)
+}
 
+func main() {
 	////// Авторизация
-	/* auth, u := oauth.AuthCodeFlow(oauth.AuthParams{
-		Client_ID:    v.Client_ID,                                  // идентификатор приложения ВК
-		Display:      oauth.Page,                                   // формат отображения страницы при авторизации
-		Group_IDs:    v.Group_IDs,                                  // идентификаторы групп
-		Scope:        []oauth.Scope{oauth.Messages, oauth.Manage},  // рарещение прав при авторизации
-		Redirect_URI: "https://e5c7-94-241-222-102.ngrok.io/token", // на данный адрес будет отправлен код доступа, необходимый для получения токена авторизации
-		CleintSecret: "ClientSecret",
-	}) // защищенный ключ приложения ВК
+	/* 	auth = oauth.AuthCodeFlow(oauth.AuthParams{
+	   		Client_ID:    8117275,                                      // идентификатор приложения ВК
+	   		Display:      oauth.Page,                                   // формат отображения страницы при авторизации
+	   		Group_IDs:    []int{203374987},                             // идентификаторы групп
+	   		Scope:        []oauth.Scope{oauth.Messages, oauth.Manage},  // рарещение прав при авторизации
+	   		Redirect_URI: "https://1c6a-178-44-109-249.ngrok.io/token", // на данный адрес будет отправлен код доступа, необходимый для получения токена авторизации
+	   		ClientSecret: "MlGb6nLlbUqV0K3xau4Q",
+	   	}) // защищенный ключ приложения ВК
 
-	// необходимо перенаправить пользователя по адресу в переменной u для авторизации
+	   	log.Println(auth.URL) */
 
-	group_tokens := auth.GetToken(r.URL) //r.URL - URL, с кодом доступа, полученный после авторизации */
+	// необходимо перенаправить пользователя по адресу в переменной auth.URL для авторизации
+
+	//group_tokens, _ := auth.GetToken(r.URL) //r.URL - URL, с кодом доступа, полученный после авторизации
 	//////
 
 	//group_tokens - массив с полученными токенами для указанных групп
-
-	clbck := callbackApi.New()
-
 	vk.UserToken = "e96350e10f9dbf5f81aff0919bf69c879769a716c3e0d4cdce190cf5d10b3907c1f69132092786250e5d1"
 
-	clbck.Vk = vk
+	clbck := callback.New(vk)
 
 	clbck.Title = "GroupTitle"                                  //название группы
-	clbck.URL = "https://0d1d-89-254-254-209.ngrok.io/callback" //адрес, на который будут приходить уведомления
+	clbck.URL = "https://1c6a-178-44-109-249.ngrok.io/callback" //адрес, на который будут приходить уведомления
 
-	clbck.Functions = callbackApi.FuncList{ //список функций для отслеживания определенных событиый
+	clbck.Functions = callback.FuncList{ //список функций для отслеживания определенных событиый
 		NewMessage:         MessageFromUser,
 		MessageReply:       MessageFromGroup,
 		MessageEdit:        MessageEditt,
@@ -63,17 +60,41 @@ func main() {
 		MessageEvent:       MessageEventt,
 	}
 
-	clbck.Settings = append(clbck.Settings, callbackApi.MessageEdit, callbackApi.MessageNew,
-		callbackApi.MessageReply, callbackApi.MessageAllow, callbackApi.MessageDeny, callbackApi.MessageTypingState, callbackApi.MessageEvent)
+	clbck.Settings = append(clbck.Settings, callback.MessageEdit, callback.MessageNew,
+		callback.MessageReply, callback.MessageAllow, callback.MessageDeny, callback.MessageTypingState, callback.MessageEvent)
 
 	go func() {
-		_, _ = clbck.AutoConnect() //автоматическое подключение Callback API (без вмешательства пользователя)
+		_, err := clbck.AutoConnect() //автоматическое подключение Callback API (без вмешательства пользователя)
+
+		if err != nil {
+			log.Println(err)
+		}
 	}()
 
 	k := api.GetKeyboard()
 
 	k.OneTime = true
 	k.Inline = false
+
+	ids_response, id_response, err := vk.MessagesSend(api.MessagesSendParams{
+		//PeerIDs: []int{106988557},
+		//UserID: 106988557,
+		//PeerID:   106988557,
+		UserIDs:  []int{106988557},
+		Message:  "message",
+		RandomID: 0,
+		//Keyboard: k,
+	})
+
+	if ids_response.Response != nil {
+		log.Println("IDs Response:", ids_response.Response)
+	} else if id_response.Response != 0 {
+		log.Println("ID Response:", id_response.Response)
+	}
+
+	if err != nil {
+		log.Println(err)
+	}
 
 	/* k.AddButton(api.KeyboardButtons{
 		Action: api.KeyboardActionTypeText{
@@ -104,7 +125,7 @@ func main() {
 		},
 	}) */
 
-	k.AddButton(api.KeyboardButtons{
+	/* k.AddButton(api.KeyboardButtons{
 		Action: api.KeyboardActionTypeCallback{
 			Type:    api.ActionCallback,
 			Payload: api.ToPayload("btn1"),
@@ -116,10 +137,10 @@ func main() {
 	log.Println(k.Buttons[0][0])
 
 	at, err := vk.GetAttachments(api.GetAttachmentsParams{
-		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
+		FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/Безымянный.png"},
 		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Король и Шут - Дагон.mp3"},
 		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx", "C:/Users/a1exCross/Desktop/VKElmaLib/Ответы Караваева.docx"},
-		FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Ви део.mp4"},
+		//FilePaths: []string{"C:/Users/a1exCross/Desktop/VKElmaLib/Ви део.mp4"},
 		//FilePaths:     []string{"C:/Users/a1exCross/Desktop/VKElmaLib/_iOe4_DihIE.jpg", "C:/Users/a1exCross/Desktop/VKElmaLib/Описание алгоритмов Заболотских, Иванов.docx"},
 		PeerID: 106988557,
 		//OriginalPhoto: true,
@@ -151,7 +172,7 @@ func main() {
 
 	if err != nil {
 		log.Println(err)
-	}
+	} */
 
 	/* res_del, err := vk.MessagesDelete(api.MessagesDeleteParams{
 		//MessageIDs: []int{id.Response[0].ConversationMessageID},
@@ -202,13 +223,14 @@ func main() {
 	   	} */
 
 	http.HandleFunc("/callback", clbck.HandleFunc)
+	http.HandleFunc("/token", token)
 	http.ListenAndServe(":80", nil)
 }
 
-func MessageFromUser(e callbackApi.Events, obj callbackApi.MessageObject) { //callback функция для отслеживания новых сообщений
+func MessageFromUser(e callback.Events, obj callback.MessageObject) { //callback функция для отслеживания новых сообщений
 	log.Println("Пользователь с идентификатором", obj.Message.FromID, "отправил сообщение", obj.Message.Text)
 
-	if obj.Message.Payload != nil {
+	if obj.Message.Payload.Payload.Button != "" || obj.Message.Payload.Payload.Command != "" {
 		log.Println(obj.Message.Payload.Payload)
 	}
 
@@ -218,43 +240,43 @@ func MessageFromUser(e callbackApi.Events, obj callbackApi.MessageObject) { //ca
 
 	if obj.Message.Attachments != nil {
 		for _, v := range obj.Message.Attachments {
-			if v.Type == callbackApi.Photo {
+			if v.Type == callback.Photo {
 				log.Println(v.Photo.GetMaxSizePhotoUrl().Url)
 			}
 
-			if v.Type == callbackApi.Video {
+			if v.Type == callback.Video {
 				r, _ := vk.GetVideo(api.GetVideoParams{
 					OwnerID: v.Video.OwnerID,
-					Videos:  strconv.Itoa(v.Video.OwnerID) + "_" + strconv.Itoa(v.Video.ID),
+					Videos:  fmt.Sprint(v.Video.OwnerID) + "_" + fmt.Sprint(v.Video.ID),
 				})
 
 				log.Println(r.Response.Items[0].Player)
 			}
 
-			if v.Type == callbackApi.Doc {
+			if v.Type == callback.Doc {
 				log.Println(v.Doc.Title)
 			}
 
-			if v.Type == callbackApi.Audio {
+			if v.Type == callback.Audio {
 				log.Println(v.Audio.Title)
 			}
 
-			if v.Type == callbackApi.AudioMessage {
+			if v.Type == callback.AudioMessage {
 				log.Println(v.AudioMessage.OwnerID)
 			}
 
-			if v.Type == callbackApi.Graffiti {
+			if v.Type == callback.Graffiti {
 				log.Println(v.Graffiti.URL)
 			}
 
-			if v.Type == callbackApi.Sticker {
+			if v.Type == callback.Sticker {
 				log.Println(v.Sticker.AnimationURL)
 			}
 		}
 	}
 }
 
-func MessageFromGroup(e callbackApi.Events, obj callbackApi.MessageObjectMessage) {
+func MessageFromGroup(e callback.Events, obj callback.MessageObjectMessage) {
 	log.Println("Пользователь с идентификатором", e.GroupID, "отправил сообщение", obj.Text)
 
 	_, err := vk.MessagesGetByConversationMessageID(api.MessagesGetByConversationMessageIDParams{
@@ -269,23 +291,23 @@ func MessageFromGroup(e callbackApi.Events, obj callbackApi.MessageObjectMessage
 	}
 }
 
-func MessageEditt(e callbackApi.Events, obj callbackApi.MessageObjectMessage) {
+func MessageEditt(e callback.Events, obj callback.MessageObjectMessage) {
 	log.Println(fmt.Sprintf("%d отредактировал сообщение", obj.FromID))
 }
 
-func MessageTypingStatee(e callbackApi.Events, obj callbackApi.MessageTypingStateObject) {
+func MessageTypingStatee(e callback.Events, obj callback.MessageTypingStateObject) {
 	log.Println(fmt.Sprintf("Пользователь с ID = %d набирает сообщение для ID %d", obj.FromID, obj.ToID))
 }
 
-func MessageDenyy(e callbackApi.Events, obj callbackApi.MessageDenyObject) {
+func MessageDenyy(e callback.Events, obj callback.MessageDenyObject) {
 	log.Println(fmt.Sprintf("Пользователь %d запретил сообщения от сообщества", obj.UserID))
 }
 
-func MessageAlloww(e callbackApi.Events, obj callbackApi.MessageAllowObject) {
+func MessageAlloww(e callback.Events, obj callback.MessageAllowObject) {
 	log.Println(fmt.Sprintf("Пользователь %d разрешил сообщения от сообщества", obj.UserID))
 }
 
-func MessageEventt(e callbackApi.Events, obj callbackApi.MessageEventObject) {
+func MessageEventt(e callback.Events, obj callback.MessageEventObject) {
 	log.Println(fmt.Sprintf("Нажата callback кнопка в чат-боте %s", obj.Payload.Payload.Button))
 
 	_, err := vk.SendMessageEventAnswer(api.SendMessageEventAnswerParams{

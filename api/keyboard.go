@@ -2,10 +2,36 @@ package api
 
 import "fmt"
 
+//https://vk.com/dev/bots_docs
+func GetKeyboard() Keyboard {
+	return Keyboard{
+		Buttons: make([][]KeyboardButtons, 1),
+	}
+}
+
 type Keyboard struct {
 	OneTime bool                `json:"one_time"`
 	Buttons [][]KeyboardButtons `json:"buttons"`
 	Inline  bool                `json:"inline"`
+}
+
+type KeyboardButtons struct {
+	Action interface{} `json:"action"`
+	Color  ButtonColor `json:"color,omitempty"`
+}
+
+func (b *Keyboard) AddButton(p KeyboardButtons) {
+	str_count := 0
+
+	if len(b.Buttons) > 0 {
+		str_count = len(b.Buttons)
+		b.Buttons[str_count-1] = append(b.Buttons[str_count-1], p)
+	}
+}
+
+func (b *Keyboard) AddLine() {
+	var p []KeyboardButtons
+	b.Buttons = append(b.Buttons, p)
 }
 
 type ButtonColor string
@@ -27,6 +53,15 @@ const (
 	ActionVkApps   ActionType = "open_app"
 	ActionCallback ActionType = "callback"
 )
+
+type Action struct {
+	Text     KeyboardActionTypeText
+	OpenLink KeyboardActionTypeOpenLink
+	Location KeyboardActionTypeLocation
+	VkPay    KeyboardActionTypeVkPay
+	VkApps   KeyboardActionTypeVkApps
+	Callback KeyboardActionTypeCallback
+}
 
 type KeyboardActionTypeText struct {
 	Type    ActionType `json:"type"`
@@ -67,41 +102,6 @@ type KeyboardActionTypeCallback struct {
 	Label   string     `json:"label"`
 }
 
-type Action struct {
-	Text     KeyboardActionTypeText
-	OpenLink KeyboardActionTypeOpenLink
-	Location KeyboardActionTypeLocation
-	VkPay    KeyboardActionTypeVkPay
-	VkApps   KeyboardActionTypeVkApps
-	Callback KeyboardActionTypeCallback
-}
-
-type KeyboardButtons struct {
-	Action interface{} `json:"action"`
-	Color  ButtonColor `json:"color,omitempty"`
-}
-
-func (b *Keyboard) AddLine() {
-	var p []KeyboardButtons
-	b.Buttons = append(b.Buttons, p)
-}
-
 func ToPayload(s string) string {
 	return fmt.Sprintf("{\"button\": \"%s\"}", s)
-}
-
-func (b *Keyboard) AddButton(p KeyboardButtons) {
-	str_count := 0
-
-	if len(b.Buttons) > 0 {
-		str_count = len(b.Buttons)
-		b.Buttons[str_count-1] = append(b.Buttons[str_count-1], p)
-	}
-}
-
-//https://vk.com/dev/bots_docs
-func GetKeyboard() Keyboard {
-	return Keyboard{
-		Buttons: make([][]KeyboardButtons, 1),
-	}
 }

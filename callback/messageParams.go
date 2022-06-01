@@ -1,4 +1,4 @@
-package callbackApi
+package callback
 
 type PhotoSize struct {
 	Type   string `json:"type"`

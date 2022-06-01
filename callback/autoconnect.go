@@ -1,4 +1,4 @@
-package callbackApi
+package callback
 
 import (
 	"errors"
@@ -128,7 +128,7 @@ func setSettings(v vk.VK, e []EventType, group_id, server_id int) vk.CallbackSet
 	return settings
 }
 
-func (c Callback) BuildRequestAddCallbackServer() (string, error) {
+func (c *Callback) BuildRequestAddCallbackServer() (string, error) {
 	var u string = ""
 
 	group, err := c.Vk.GetCurrentGroup()
