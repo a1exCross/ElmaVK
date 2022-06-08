@@ -208,7 +208,7 @@ func (v VK) GetUserByID(p UserGetParams) (User, error) {
 		return User{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("users.get?", u)
+	res, err := v.reqeustApiGet("users.get?", u)
 	if err != nil {
 		return User{}, err
 	}

@@ -105,7 +105,7 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 		return SendMessageEventAnswerResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("messages.sendMessageEventAnswer?", u, data)
+	res, err := v.reqeustApiPost("messages.sendMessageEventAnswer?", u, data)
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
 	}
@@ -190,7 +190,7 @@ func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessag
 		return MessagesGetByConversationMessageIDResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("messages.getByConversationMessageId?", u, data)
+	res, err := v.reqeustApiPost("messages.getByConversationMessageId?", u, data)
 	if err != nil {
 		return MessagesGetByConversationMessageIDResponse{}, err
 	}
@@ -361,7 +361,7 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 		return 0, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("messages.edit?", u, data)
+	res, err := v.reqeustApiPost("messages.edit?", u, data)
 	if err != nil {
 		return 0, err
 	}
@@ -436,7 +436,7 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 		return nil, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("messages.delete?", u, data)
+	res, err := v.reqeustApiPost("messages.delete?", u, data)
 	if err != nil {
 		return nil, err
 	}
@@ -781,7 +781,7 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, Message
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("messages.send?", u, data)
+	res, err := v.reqeustApiPost("messages.send?", u, data)
 	if err != nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
@@ -880,7 +880,7 @@ func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
 		return SaveVideoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("video.save?", u)
+	res, err := v.reqeustApiGet("video.save?", u)
 	if err != nil {
 		return SaveVideoResponse{}, err
 	}
@@ -934,7 +934,7 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 		return "", errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("docs.getMessagesUploadServer?", u)
+	res, err := v.reqeustApiGet("docs.getMessagesUploadServer?", u)
 	if err != nil {
 		return "", err
 	}
@@ -974,7 +974,7 @@ type GetMessagesUploadServerDocResponse struct {
 		return "", errors.New("Token group is null")
 	}
 
-	res, err := v.Reqeust_api_get("audio.getUploadServer?", u)
+	res, err := v.reqeustApiGet("audio.getUploadServer?", u)
 
 	if err != nil {
 		return "", err
@@ -1022,7 +1022,7 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("photos.getMessagesUploadServer?", u)
+	res, err := v.reqeustApiGet("photos.getMessagesUploadServer?", u)
 	if err != nil {
 		return "", err
 	}
@@ -1091,7 +1091,7 @@ func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
 		return SaveDocResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("docs.save?", u, data)
+	res, err := v.reqeustApiPost("docs.save?", u, data)
 	if err != nil {
 		return SaveDocResponse{}, err
 	}
@@ -1155,7 +1155,7 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 		return SaveMessagesPhotoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("photos.saveMessagesPhoto?", u, data)
+	res, err := v.reqeustApiPost("photos.saveMessagesPhoto?", u, data)
 	if err != nil {
 		return SaveMessagesPhotoResponse{}, err
 	}
@@ -1268,7 +1268,7 @@ func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
 		return GetVideoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_post("video.get?", u, data)
+	res, err := v.reqeustApiPost("video.get?", u, data)
 	if err != nil {
 		return GetVideoResponse{}, err
 	}

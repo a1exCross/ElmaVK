@@ -21,7 +21,7 @@ func (v VK) GetCurrentGroup() (*GetCurrentGroupResponse, error) {
 		return nil, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("groups.getById?", u)
+	res, err := v.reqeustApiGet("groups.getById?", u)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -75,7 +75,7 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("groups.getCallbackConfirmationCode?", u)
+	res, err := v.reqeustApiGet("groups.getCallbackConfirmationCode?", u)
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +122,7 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("groups.getCallbackServers?", u)
+	res, err := v.reqeustApiGet("groups.getCallbackServers?", u)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ type ServerItem struct {
 
 //https://dev.vk.com/method/groups.addCallbackServer
 func (v VK) AddCallbackServer(u string) (int, error) {
-	res, err := v.Reqeust_api_get("groups.addCallbackServer?", u)
+	res, err := v.reqeustApiGet("groups.addCallbackServer?", u)
 	if err != nil {
 		return 0, err
 	}
@@ -216,7 +216,7 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 		u += "&access_token=" + v.Token + "&v=" + v.Version
 	}
 
-	res, err := v.Reqeust_api_get("groups.deleteCallbackServer?", u)
+	res, err := v.reqeustApiGet("groups.deleteCallbackServer?", u)
 	if err != nil {
 		return -1, err
 	}
@@ -275,7 +275,7 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 		return 0, errors.New("Auth token is empty")
 	}
 
-	res, err := v.Reqeust_api_get("groups.setCallbackSettings?", u)
+	res, err := v.reqeustApiGet("groups.setCallbackSettings?", u)
 	if err != nil {
 		return -1, err
 	}
