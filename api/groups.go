@@ -22,19 +22,16 @@ func (v VK) GetCurrentGroup() (*GetCurrentGroupResponse, error) {
 	}
 
 	res, err := v.Reqeust_api_get("groups.getById?", u)
-
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return nil, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +39,6 @@ func (v VK) GetCurrentGroup() (*GetCurrentGroupResponse, error) {
 	group := GetCurrentGroupResponse{}
 
 	err = json.Unmarshal(data, &group)
-
 	if err != nil {
 		return nil, err
 	}
@@ -80,19 +76,16 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 	}
 
 	res, err := v.Reqeust_api_get("groups.getCallbackConfirmationCode?", u)
-
 	if err != nil {
 		return "", err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return "", errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return "", err
 	}
@@ -100,7 +93,6 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 	key := GetConfirmationKeyResponse{}
 
 	err = json.Unmarshal(data, &key)
-
 	if err != nil {
 		return "", err
 	}
@@ -131,19 +123,16 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 	}
 
 	res, err := v.Reqeust_api_get("groups.getCallbackServers?", u)
-
 	if err != nil {
 		return nil, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return nil, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +140,6 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 	var r GetCallbackServersResponse
 
 	err = json.Unmarshal(data, &r)
-
 	if err != nil {
 		return nil, err
 	}
@@ -178,19 +166,16 @@ type ServerItem struct {
 //https://dev.vk.com/method/groups.addCallbackServer
 func (v VK) AddCallbackServer(u string) (int, error) {
 	res, err := v.Reqeust_api_get("groups.addCallbackServer?", u)
-
 	if err != nil {
 		return 0, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return 0, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return 0, err
 	}
@@ -198,7 +183,6 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 	resp := AddCallbackServerResponse{}
 
 	err = json.Unmarshal(data, &resp)
-
 	if err != nil {
 		return 0, err
 	}
@@ -233,19 +217,16 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 	}
 
 	res, err := v.Reqeust_api_get("groups.deleteCallbackServer?", u)
-
 	if err != nil {
 		return -1, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return 0, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return -1, err
 	}
@@ -253,7 +234,6 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 	resp := ServerDeleteOrSetResponse{}
 
 	err = json.Unmarshal(data, &resp)
-
 	if err != nil {
 		return -1, err
 	}
@@ -296,19 +276,16 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 	}
 
 	res, err := v.Reqeust_api_get("groups.setCallbackSettings?", u)
-
 	if err != nil {
 		return -1, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return 0, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return -1, err
 	}
@@ -316,7 +293,6 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 	resp := ServerDeleteOrSetResponse{}
 
 	err = json.Unmarshal(data, &resp)
-
 	if err != nil {
 		return -1, err
 	}

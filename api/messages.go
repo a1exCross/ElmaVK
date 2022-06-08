@@ -106,27 +106,23 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 	}
 
 	res, err := v.Reqeust_api_post("messages.sendMessageEventAnswer?", u, data)
-
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return SendMessageEventAnswerResponse{}, errors.New(check)
 	}
 
-	dat, err := ioutil.ReadAll(res.Body)
-
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
 	}
 
 	var t SendMessageEventAnswerResponse
 
-	err = json.Unmarshal(dat, &t)
-
+	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
 	}
@@ -195,27 +191,23 @@ func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessag
 	}
 
 	res, err := v.Reqeust_api_post("messages.getByConversationMessageId?", u, data)
-
 	if err != nil {
 		return MessagesGetByConversationMessageIDResponse{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return MessagesGetByConversationMessageIDResponse{}, errors.New(check)
 	}
 
-	dat, err := ioutil.ReadAll(res.Body)
-
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return MessagesGetByConversationMessageIDResponse{}, err
 	}
 
 	var t MessagesGetByConversationMessageIDResponse
 
-	err = json.Unmarshal(dat, &t)
-
+	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return MessagesGetByConversationMessageIDResponse{}, err
 	}
@@ -355,7 +347,6 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 	}
 
 	ps, err := json.Marshal(p.Keyboard)
-
 	if err != nil {
 		return 0, err
 	}
@@ -371,27 +362,23 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 	}
 
 	res, err := v.Reqeust_api_post("messages.edit?", u, data)
-
 	if err != nil {
 		return 0, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return 0, errors.New(check)
 	}
 
-	dat, err := ioutil.ReadAll(res.Body)
-
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return 0, err
 	}
 
 	var t MessagesEditResponse
 
-	err = json.Unmarshal(dat, &t)
-
+	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return 0, err
 	}
@@ -450,19 +437,16 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 	}
 
 	res, err := v.Reqeust_api_post("messages.delete?", u, data)
-
 	if err != nil {
 		return nil, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return nil, errors.New(check)
 	}
 
 	dat, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return nil, err
 	}
@@ -470,13 +454,11 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 	var t MessagesDeleteResponse
 
 	err = json.Unmarshal(dat, &t)
-
 	if err != nil {
 		return nil, err
 	}
 
 	var arr map[string]int
-
 	err = json.Unmarshal(t.Response, &arr)
 
 	if err != nil {
@@ -505,14 +487,12 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 	var at []string
 
 	group_id, err := v.GetCurrentGroup()
-
 	if err != nil {
 		return nil, err
 	}
 
 	for _, path := range p.FilePaths {
 		file, err := os.Open(path)
-
 		if err != nil {
 			return nil, err
 		}
@@ -531,7 +511,6 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 
 		if (ext == ".jpg" && !p.OriginalPhoto) || (ext == ".png" && !p.OriginalPhoto) || (ext == ".gif" && !p.OriginalPhoto) {
 			up, err = v.GetMessagesUploadServerPhoto(p.PeerID)
-
 			if err != nil {
 				return nil, err
 			}
@@ -550,7 +529,6 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 				Wallpost:  false,
 				GroupID:   group_id.Response[0].ID,
 			})
-
 			if err != nil {
 				return nil, err
 			}
@@ -560,7 +538,6 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			attachment_type = "video"
 		} else if ext != ".mp3" && ext != ".exe" {
 			up, err = v.GetMessagesUploadServerDoc("doc", p.PeerID)
-
 			if err != nil {
 				return nil, err
 			}
@@ -573,37 +550,31 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 		}
 
 		part, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
-
 		if err != nil {
 			return nil, err
 		}
 
 		_, err = io.Copy(part, file)
-
 		if err != nil {
 			return nil, err
 		}
 
 		err = writer.Close()
-
 		if err != nil {
 			return nil, err
 		}
 
 		res, err := http.DefaultClient.Post(up, writer.FormDataContentType(), body)
-
 		if err != nil {
 			return nil, err
 		}
 
 		check := vkerrors.GetError(res)
-
 		if check != "ok" {
 			return nil, errors.New(check)
 		}
 
 		data, err := ioutil.ReadAll(res.Body)
-
 		if err != nil {
 			return nil, err
 		}
@@ -613,13 +584,11 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			var r AfterUploadPhotoResponse
 
 			err = json.Unmarshal(data, &r)
-
 			if err != nil {
 				return nil, err
 			}
 
 			s, err := v.SaveMessagesPhoto(r.Hash, r.Photo, r.Server)
-
 			if err != nil {
 				return nil, err
 			}
@@ -631,7 +600,6 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			var r AfterUploadDocResponse
 
 			err = json.Unmarshal(data, &r)
-
 			if err != nil {
 				return nil, err
 			}
@@ -639,7 +607,6 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 			s, err := v.SaveDoc(SaveDocParams{
 				File: r.File,
 			})
-
 			if err != nil {
 				return nil, err
 			}
@@ -774,7 +741,6 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, Message
 	}
 
 	ps, err := json.Marshal(p.Keyboard)
-
 	if err != nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
@@ -816,19 +782,16 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, Message
 	}
 
 	res, err := v.Reqeust_api_post("messages.send?", u, data)
-
 	if err != nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
@@ -918,19 +881,16 @@ func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
 	}
 
 	res, err := v.Reqeust_api_get("video.save?", u)
-
 	if err != nil {
 		return SaveVideoResponse{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return SaveVideoResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return SaveVideoResponse{}, err
 	}
@@ -938,7 +898,6 @@ func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
 	var r SaveVideoResponse
 
 	err = json.Unmarshal(body, &r)
-
 	if err != nil {
 		return SaveVideoResponse{}, err
 	}
@@ -976,19 +935,16 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 	}
 
 	res, err := v.Reqeust_api_get("docs.getMessagesUploadServer?", u)
-
 	if err != nil {
 		return "", err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return "", errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return "", err
 	}
@@ -996,7 +952,6 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 	var g GetMessagesUploadServerDocResponse
 
 	err = json.Unmarshal(body, &g)
-
 	if err != nil {
 		return "", err
 	}
@@ -1068,19 +1023,16 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 	}
 
 	res, err := v.Reqeust_api_get("photos.getMessagesUploadServer?", u)
-
 	if err != nil {
 		return "", err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return "", errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return "", err
 	}
@@ -1088,7 +1040,6 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 	var g GetMessagesUploadServerPhotoResponse
 
 	err = json.Unmarshal(data, &g)
-
 	if err != nil {
 		return "", err
 	}
@@ -1141,19 +1092,16 @@ func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
 	}
 
 	res, err := v.Reqeust_api_post("docs.save?", u, data)
-
 	if err != nil {
 		return SaveDocResponse{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return SaveDocResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return SaveDocResponse{}, err
 	}
@@ -1161,7 +1109,6 @@ func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
 	var r SaveDocResponse
 
 	err = json.Unmarshal(body, &r)
-
 	if err != nil {
 		return SaveDocResponse{}, err
 	}
@@ -1209,19 +1156,16 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 	}
 
 	res, err := v.Reqeust_api_post("photos.saveMessagesPhoto?", u, data)
-
 	if err != nil {
 		return SaveMessagesPhotoResponse{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return SaveMessagesPhotoResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return SaveMessagesPhotoResponse{}, err
 	}
@@ -1229,7 +1173,6 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 	var r SaveMessagesPhotoResponse
 
 	err = json.Unmarshal(body, &r)
-
 	if err != nil {
 		return SaveMessagesPhotoResponse{}, err
 	}
@@ -1326,19 +1269,16 @@ func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
 	}
 
 	res, err := v.Reqeust_api_post("video.get?", u, data)
-
 	if err != nil {
 		return GetVideoResponse{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return GetVideoResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return GetVideoResponse{}, err
 	}
@@ -1346,7 +1286,6 @@ func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
 	var r GetVideoResponse
 
 	err = json.Unmarshal(body, &r)
-
 	if err != nil {
 		return GetVideoResponse{}, err
 	}

@@ -42,7 +42,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageObject
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -50,7 +49,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var p *Payload
 
 			err = json.Unmarshal(e.Object, &p)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -64,7 +62,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageObjectMessage
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -72,7 +69,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var p *Payload
 
 			err = json.Unmarshal(e.Object, &p)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -86,7 +82,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageObjectMessage
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -94,7 +89,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var p *Payload
 
 			err = json.Unmarshal(e.Object, &p)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -108,7 +102,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageAllowObject
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -120,7 +113,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageDenyObject
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -132,7 +124,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageTypingStateObject
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -144,7 +135,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var obj MessageEventObject
 
 			err := json.Unmarshal(e.Object, &obj)
-
 			if err != nil {
 				log.Println(err)
 			}
@@ -152,7 +142,6 @@ func (c Callback) CallFuncList(data []byte, e Events) {
 			var p Payload
 
 			err = json.Unmarshal(e.Object, &p)
-
 			if err != nil {
 				log.Println(err)
 			}

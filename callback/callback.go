@@ -29,7 +29,6 @@ func New(v vk.VK) Callback {
 
 func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
-
 	if err != nil {
 		log.Println(err)
 	}
@@ -39,7 +38,6 @@ func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var e Events
 
 	err = json.Unmarshal(data, &e)
-
 	if err != nil {
 		log.Println(err)
 	}
@@ -55,7 +53,6 @@ func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = w.Write([]byte("ok"))
-
 	if err != nil {
 		log.Println(err)
 	}

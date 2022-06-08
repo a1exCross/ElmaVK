@@ -86,7 +86,6 @@ func ImplictFlow(p AuthParams) (*url.URL, error) {
 	u += "&response_type=token&v=" + version
 
 	ur, err := url.Parse(auth_url + u)
-
 	if err != nil {
 		return &url.URL{}, err
 	}
@@ -194,33 +193,28 @@ func (a *Auth) get_token_request(code string) (GroupTokens, error) {
 	u += "&redirect_uri=" + a.Redirect_URI
 
 	req, err := http.NewRequest("GET", get_token_url+u, nil)
-
 	if err != nil {
 		return GroupTokens{}, err
 	}
 
 	res, err := a.Client.Do(req)
-
 	if err != nil {
 		return GroupTokens{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return GroupTokens{}, errors.New(check)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
-
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return GroupTokens{}, err
 	}
 
 	var t GroupTokens
 
-	err = json.Unmarshal(data, &t)
-
+	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return GroupTokens{}, err
 	}
@@ -232,7 +226,6 @@ func (a Auth) GetToken(u *url.URL) (GroupTokens, error) {
 	code := u.Query().Get("code")
 
 	tokens, err := a.get_token_request(code)
-
 	if err != nil {
 		return GroupTokens{}, err
 	}

@@ -11,20 +11,18 @@ import (
 
 func GetError(r *http.Response) string {
 	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err.Error()
+	}
 
 	r.Body.Close()
 
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
-	if err != nil {
-		return err.Error()
-	}
-
 	var b BodyError
 	b.Error.ErrorCode = -1
 
 	err = json.Unmarshal(data, &b)
-
 	if err != nil {
 		return err.Error()
 	}

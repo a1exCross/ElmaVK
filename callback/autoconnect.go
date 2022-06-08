@@ -13,13 +13,11 @@ import (
 
 func (c *Callback) AutoConnect() (int, error) {
 	group, err := c.Vk.GetCurrentGroup()
-
 	if err != nil {
 		return 0, err
 	}
 
 	servers, err := c.Vk.GetCallbackServers(group.Response[0].ID)
-
 	if err != nil {
 		return 0, err
 	}
@@ -50,24 +48,21 @@ func (c *Callback) AutoConnect() (int, error) {
 
 	if server_id == 0 {
 		u, err := c.BuildRequestAddCallbackServer()
-
 		if err != nil {
 			return 0, err
 		}
 
 		c.ConfirmationKey, err = c.Vk.GetConfirmaionKey(group.Response[0].ID)
-
 		if err != nil {
 			return 0, err
 		}
 
 		res, err := c.Vk.AddCallbackServer(u)
-
-		server_id = res
-
 		if err != nil {
 			return 0, err
 		}
+
+		server_id = res
 
 		log.Println("New server is created with ID =", res)
 	}
@@ -75,7 +70,6 @@ func (c *Callback) AutoConnect() (int, error) {
 	settings := setSettings(c.Vk, c.Settings, group.Response[0].ID, server_id)
 
 	resp, err := c.Vk.SetCallbackSettings(settings)
-
 	if err != nil {
 		return 0, errors.New(err.Error())
 	}
@@ -132,7 +126,6 @@ func (c *Callback) BuildRequestAddCallbackServer() (string, error) {
 	var u string = ""
 
 	group, err := c.Vk.GetCurrentGroup()
-
 	if err != nil {
 		return "", err
 	}

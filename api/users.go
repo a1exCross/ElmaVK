@@ -209,19 +209,16 @@ func (v VK) GetUserByID(p UserGetParams) (User, error) {
 	}
 
 	res, err := v.Reqeust_api_get("users.get?", u)
-
 	if err != nil {
 		return User{}, err
 	}
 
 	check := vkerrors.GetError(res)
-
 	if check != "ok" {
 		return User{}, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return User{}, err
 	}
@@ -229,7 +226,6 @@ func (v VK) GetUserByID(p UserGetParams) (User, error) {
 	var user User
 
 	err = json.Unmarshal(data, &user)
-
 	if err != nil {
 		return User{}, errors.New(err.Error())
 	}
