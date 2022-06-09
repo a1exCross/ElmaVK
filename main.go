@@ -81,7 +81,7 @@ func main() {
 		//UserID: 106988557,
 		//PeerID:   106988557,
 		UserIDs:  []int{106988557},
-		Message:  "message",
+		Message:  "mess age",
 		RandomID: 0,
 		//Keyboard: k,
 	})

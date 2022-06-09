@@ -705,7 +705,7 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, Message
 	}
 
 	if p.Message != "" {
-		data.Set("message", url.QueryEscape(p.Message))
+		data.Set("message", p.Message)
 	} else if p.Attachment == nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New("Required field 'Message' is empty, MethodName - MessagesSend()")
 	}
