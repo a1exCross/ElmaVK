@@ -35,7 +35,7 @@ type FuncList struct {
 	MessageEvent       func(e Events, obj MessageEventObject)
 }
 
-func (c Callback) CallFuncList(data []byte, e Events) {
+func (c Callback) callFuncList(data []byte, e Events) {
 	switch e.Type {
 	case MessageNew:
 		{

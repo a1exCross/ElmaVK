@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-
-	"github.com/a1exCross/ElmaVK/vkerrors"
 )
 
 type UserParams struct {
@@ -211,11 +209,6 @@ func (v VK) GetUserByID(p UserGetParams) (User, error) {
 	res, err := v.reqeustApiGet("users.get?", u)
 	if err != nil {
 		return User{}, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return User{}, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)

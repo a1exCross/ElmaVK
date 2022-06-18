@@ -44,7 +44,7 @@ func (c *Callback) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 	if e.Secret == c.Secret_key {
 
-		c.CallFuncList(data, e)
+		c.callFuncList(data, e)
 
 		if e.Type == "confirmation" {
 			fmt.Fprintf(w, c.ConfirmationKey)

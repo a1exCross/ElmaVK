@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-
-	"github.com/a1exCross/ElmaVK/vkerrors"
 )
 
 const auth_url = "https://oauth.vk.com/authorize?"
@@ -200,11 +198,6 @@ func (a *Auth) get_token_request(code string) (GroupTokens, error) {
 	res, err := a.Client.Do(req)
 	if err != nil {
 		return GroupTokens{}, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return GroupTokens{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)

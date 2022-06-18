@@ -14,8 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/a1exCross/ElmaVK/vkerrors"
 )
 
 type ShowSnackbarAnswerType struct {
@@ -110,11 +108,6 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 		return SendMessageEventAnswerResponse{}, err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return SendMessageEventAnswerResponse{}, errors.New(check)
-	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
@@ -193,11 +186,6 @@ func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessag
 	res, err := v.reqeustApiPost("messages.getByConversationMessageId?", u, data)
 	if err != nil {
 		return MessagesGetByConversationMessageIDResponse{}, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return MessagesGetByConversationMessageIDResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
@@ -366,11 +354,6 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 		return 0, err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return 0, errors.New(check)
-	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return 0, err
@@ -439,11 +422,6 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 	res, err := v.reqeustApiPost("messages.delete?", u, data)
 	if err != nil {
 		return nil, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return nil, errors.New(check)
 	}
 
 	dat, err := ioutil.ReadAll(res.Body)
@@ -567,11 +545,6 @@ func (v VK) GetAttachments(p GetAttachmentsParams) ([]string, error) {
 		res, err := http.DefaultClient.Post(up, writer.FormDataContentType(), body)
 		if err != nil {
 			return nil, err
-		}
-
-		check := vkerrors.GetError(res)
-		if check != "ok" {
-			return nil, errors.New(check)
 		}
 
 		data, err := ioutil.ReadAll(res.Body)
@@ -786,11 +759,6 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, Message
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New(check)
-	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
@@ -885,11 +853,6 @@ func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
 		return SaveVideoResponse{}, err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return SaveVideoResponse{}, errors.New(check)
-	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return SaveVideoResponse{}, err
@@ -939,11 +902,6 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 		return "", err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return "", errors.New(check)
-	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return "", err
@@ -978,12 +936,6 @@ type GetMessagesUploadServerDocResponse struct {
 
 	if err != nil {
 		return "", err
-	}
-
-	check := vkerrors.GetError(res)
-
-	if check != "ok" {
-		return "", errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
@@ -1025,11 +977,6 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 	res, err := v.reqeustApiGet("photos.getMessagesUploadServer?", u)
 	if err != nil {
 		return "", err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return "", errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
@@ -1096,11 +1043,6 @@ func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
 		return SaveDocResponse{}, err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return SaveDocResponse{}, errors.New(check)
-	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return SaveDocResponse{}, err
@@ -1158,11 +1100,6 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 	res, err := v.reqeustApiPost("photos.saveMessagesPhoto?", u, data)
 	if err != nil {
 		return SaveMessagesPhotoResponse{}, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return SaveMessagesPhotoResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
@@ -1271,11 +1208,6 @@ func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
 	res, err := v.reqeustApiPost("video.get?", u, data)
 	if err != nil {
 		return GetVideoResponse{}, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return GetVideoResponse{}, errors.New(check)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)

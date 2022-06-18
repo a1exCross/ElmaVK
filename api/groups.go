@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-
-	"github.com/a1exCross/ElmaVK/vkerrors"
 )
 
 //https://dev.vk.com/method/groups.get
@@ -24,11 +22,6 @@ func (v VK) GetCurrentGroup() (*GetCurrentGroupResponse, error) {
 	res, err := v.reqeustApiGet("groups.getById?", u)
 	if err != nil {
 		return nil, errors.New(err.Error())
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return nil, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
@@ -80,11 +73,6 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return "", errors.New(check)
-	}
-
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return "", err
@@ -127,11 +115,6 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, err
 	}
 
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return nil, errors.New(check)
-	}
-
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
@@ -168,11 +151,6 @@ func (v VK) AddCallbackServer(u string) (int, error) {
 	res, err := v.reqeustApiGet("groups.addCallbackServer?", u)
 	if err != nil {
 		return 0, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return 0, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
@@ -219,11 +197,6 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 	res, err := v.reqeustApiGet("groups.deleteCallbackServer?", u)
 	if err != nil {
 		return -1, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return 0, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
@@ -278,11 +251,6 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 	res, err := v.reqeustApiGet("groups.setCallbackSettings?", u)
 	if err != nil {
 		return -1, err
-	}
-
-	check := vkerrors.GetError(res)
-	if check != "ok" {
-		return 0, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
