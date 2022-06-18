@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 )
 
 type UserParams struct {
@@ -206,19 +205,14 @@ func (v VK) GetUserByID(p UserGetParams) (User, error) {
 		return User{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("users.get?", u)
-	if err != nil {
-		return User{}, err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("users.get?", u)
 	if err != nil {
 		return User{}, err
 	}
 
 	var user User
 
-	err = json.Unmarshal(data, &user)
+	err = json.Unmarshal(body, &user)
 	if err != nil {
 		return User{}, errors.New(err.Error())
 	}

@@ -103,12 +103,7 @@ func (v VK) SendMessageEventAnswer(p SendMessageEventAnswerParams) (SendMessageE
 		return SendMessageEventAnswerResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("messages.sendMessageEventAnswer?", u, data)
-	if err != nil {
-		return SendMessageEventAnswerResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("messages.sendMessageEventAnswer?", u, data)
 	if err != nil {
 		return SendMessageEventAnswerResponse{}, err
 	}
@@ -183,12 +178,7 @@ func (v VK) MessagesGetByConversationMessageID(p MessagesGetByConversationMessag
 		return MessagesGetByConversationMessageIDResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("messages.getByConversationMessageId?", u, data)
-	if err != nil {
-		return MessagesGetByConversationMessageIDResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("messages.getByConversationMessageId?", u, data)
 	if err != nil {
 		return MessagesGetByConversationMessageIDResponse{}, err
 	}
@@ -349,12 +339,7 @@ func (v VK) MessagesEdit(p MessagesEditParams) (int, error) {
 		return 0, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("messages.edit?", u, data)
-	if err != nil {
-		return 0, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("messages.edit?", u, data)
 	if err != nil {
 		return 0, err
 	}
@@ -419,19 +404,14 @@ func (v VK) MessagesDelete(p MessagesDeleteParams) (map[string]int, error) {
 		return nil, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("messages.delete?", u, data)
-	if err != nil {
-		return nil, err
-	}
-
-	dat, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("messages.delete?", u, data)
 	if err != nil {
 		return nil, err
 	}
 
 	var t MessagesDeleteResponse
 
-	err = json.Unmarshal(dat, &t)
+	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return nil, err
 	}
@@ -754,12 +734,7 @@ func (v VK) MessagesSend(p MessagesSendParams) (MessagesSendResponseIDs, Message
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("messages.send?", u, data)
-	if err != nil {
-		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("messages.send?", u, data)
 	if err != nil {
 		return MessagesSendResponseIDs{}, MessagesSendResponseID{}, err
 	}
@@ -848,12 +823,7 @@ func (v VK) SaveVideo(p SaveVideoParams) (SaveVideoResponse, error) {
 		return SaveVideoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("video.save?", u)
-	if err != nil {
-		return SaveVideoResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("video.save?", u)
 	if err != nil {
 		return SaveVideoResponse{}, err
 	}
@@ -897,12 +867,7 @@ func (v VK) GetMessagesUploadServerDoc(doc_type string, peer_id int) (string, er
 		return "", errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("docs.getMessagesUploadServer?", u)
-	if err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("docs.getMessagesUploadServer?", u)
 	if err != nil {
 		return "", err
 	}
@@ -974,19 +939,14 @@ func (v VK) GetMessagesUploadServerPhoto(peer_id int) (string, error) {
 		return "", errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("photos.getMessagesUploadServer?", u)
-	if err != nil {
-		return "", err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("photos.getMessagesUploadServer?", u)
 	if err != nil {
 		return "", err
 	}
 
 	var g GetMessagesUploadServerPhotoResponse
 
-	err = json.Unmarshal(data, &g)
+	err = json.Unmarshal(body, &g)
 	if err != nil {
 		return "", err
 	}
@@ -1038,12 +998,7 @@ func (v VK) SaveDoc(p SaveDocParams) (SaveDocResponse, error) {
 		return SaveDocResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("docs.save?", u, data)
-	if err != nil {
-		return SaveDocResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("docs.save?", u, data)
 	if err != nil {
 		return SaveDocResponse{}, err
 	}
@@ -1097,12 +1052,7 @@ func (v VK) SaveMessagesPhoto(Hash, Photo string, Server int) (SaveMessagesPhoto
 		return SaveMessagesPhotoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("photos.saveMessagesPhoto?", u, data)
-	if err != nil {
-		return SaveMessagesPhotoResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("photos.saveMessagesPhoto?", u, data)
 	if err != nil {
 		return SaveMessagesPhotoResponse{}, err
 	}
@@ -1205,12 +1155,7 @@ func (v VK) GetVideo(p GetVideoParams) (GetVideoResponse, error) {
 		return GetVideoResponse{}, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiPost("video.get?", u, data)
-	if err != nil {
-		return GetVideoResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiPost("video.get?", u, data)
 	if err != nil {
 		return GetVideoResponse{}, err
 	}

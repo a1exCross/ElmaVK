@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,7 +12,7 @@ import (
 
 const api_host = "https://api.vk.com/method/"
 
-func (v VK) reqeustApiGet(method, param string) (*http.Response, error) {
+func (v VK) reqeustApiGet(method, param string) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, api_host+method+param, nil)
 	if err != nil {
 		return nil, err
@@ -25,10 +26,10 @@ func (v VK) reqeustApiGet(method, param string) (*http.Response, error) {
 		return nil, errors.New(check)
 	}
 
-	return res, nil
+	return ioutil.ReadAll(res.Body)
 }
 
-func (v VK) reqeustApiPost(method, param string, data url.Values) (*http.Response, error) {
+func (v VK) reqeustApiPost(method, param string, data url.Values) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodPost, api_host+method+param, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
@@ -44,5 +45,5 @@ func (v VK) reqeustApiPost(method, param string, data url.Values) (*http.Respons
 		return nil, errors.New(check)
 	}
 
-	return res, nil
+	return ioutil.ReadAll(res.Body)
 }

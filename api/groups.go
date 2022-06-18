@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
 )
 
@@ -19,19 +18,14 @@ func (v VK) GetCurrentGroup() (*GetCurrentGroupResponse, error) {
 		return nil, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("groups.getById?", u)
+	body, err := v.reqeustApiGet("groups.getById?", u)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	group := GetCurrentGroupResponse{}
 
-	err = json.Unmarshal(data, &group)
+	err = json.Unmarshal(body, &group)
 	if err != nil {
 		return nil, err
 	}
@@ -68,19 +62,14 @@ func (v VK) GetConfirmaionKey(group_id int) (string, error) {
 		return "", errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("groups.getCallbackConfirmationCode?", u)
-	if err != nil {
-		return "", err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("groups.getCallbackConfirmationCode?", u)
 	if err != nil {
 		return "", err
 	}
 
 	key := GetConfirmationKeyResponse{}
 
-	err = json.Unmarshal(data, &key)
+	err = json.Unmarshal(body, &key)
 	if err != nil {
 		return "", err
 	}
@@ -110,19 +99,14 @@ func (v VK) GetCallbackServers(group_id int) ([]ServerItem, error) { //groups.ge
 		return nil, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("groups.getCallbackServers?", u)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("groups.getCallbackServers?", u)
 	if err != nil {
 		return nil, err
 	}
 
 	var r GetCallbackServersResponse
 
-	err = json.Unmarshal(data, &r)
+	err = json.Unmarshal(body, &r)
 	if err != nil {
 		return nil, err
 	}
@@ -148,19 +132,14 @@ type ServerItem struct {
 
 //https://dev.vk.com/method/groups.addCallbackServer
 func (v VK) AddCallbackServer(u string) (int, error) {
-	res, err := v.reqeustApiGet("groups.addCallbackServer?", u)
-	if err != nil {
-		return 0, err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("groups.addCallbackServer?", u)
 	if err != nil {
 		return 0, err
 	}
 
 	resp := AddCallbackServerResponse{}
 
-	err = json.Unmarshal(data, &resp)
+	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return 0, err
 	}
@@ -194,19 +173,14 @@ func (v VK) DeleteCallbackServer(group_id, serv_id int) (int, error) {
 		u += "&access_token=" + v.Token + "&v=" + v.Version
 	}
 
-	res, err := v.reqeustApiGet("groups.deleteCallbackServer?", u)
-	if err != nil {
-		return -1, err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("groups.deleteCallbackServer?", u)
 	if err != nil {
 		return -1, err
 	}
 
 	resp := ServerDeleteOrSetResponse{}
 
-	err = json.Unmarshal(data, &resp)
+	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return -1, err
 	}
@@ -248,19 +222,14 @@ func (v VK) SetCallbackSettings(m CallbackSettings) (int, error) {
 		return 0, errors.New("Auth token is empty")
 	}
 
-	res, err := v.reqeustApiGet("groups.setCallbackSettings?", u)
-	if err != nil {
-		return -1, err
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.reqeustApiGet("groups.setCallbackSettings?", u)
 	if err != nil {
 		return -1, err
 	}
 
 	resp := ServerDeleteOrSetResponse{}
 
-	err = json.Unmarshal(data, &resp)
+	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return -1, err
 	}
